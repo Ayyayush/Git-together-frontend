@@ -10,7 +10,7 @@ import Feed from "./components/Feed";
 function App() {
   return (
     <Provider store={appStore}>
-      <BrowserRouter basename="/">
+      <BrowserRouter>
         <Routes>
 
           {/* Layout Route */}

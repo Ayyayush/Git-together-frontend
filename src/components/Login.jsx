@@ -14,23 +14,28 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!emailId || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
       const res = await axios.post(
-        `${BASE_URL}`,
+        `${BASE_URL}/login`,
         { emailId, password },
         { withCredentials: true }
       );
 
-      // ✅ Save user data in Redux
-      dispatch(addUser(res.data));
+      // backend sends { message, user }
+      dispatch(addUser(res.data.user));
 
-      // ✅ Redirect after login
       navigate("/feed");
-
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -47,38 +52,38 @@ const Login = () => {
             Login to <span className="text-primary">Gittogether</span>
           </h2>
 
-          {/* Email */}
-          <label className="form-control w-full mt-4">
-            <span className="label-text">Email</span>
-            <input
-              type="email"
-              className="input input-bordered w-full"
-              value={emailId}
-              onChange={(e) => setEmailId(e.target.value)}
-            />
-          </label>
+          <form onSubmit={handleLogin}>
+            <label className="form-control w-full mt-4">
+              <span className="label-text">Email</span>
+              <input
+                type="email"
+                className="input input-bordered w-full"
+                value={emailId}
+                onChange={(e) => setEmailId(e.target.value)}
+              />
+            </label>
 
-          {/* Password */}
-          <label className="form-control w-full mt-3">
-            <span className="label-text">Password</span>
-            <input
-              type="password"
-              className="input input-bordered w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+            <label className="form-control w-full mt-3">
+              <span className="label-text">Password</span>
+              <input
+                type="password"
+                className="input input-bordered w-full"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </label>
 
-          {/* Error */}
-          {error && <p className="text-error text-sm mt-2">{error}</p>}
+            {error && (
+              <p className="text-error text-sm mt-2">{error}</p>
+            )}
 
-          {/* Button */}
-          <button
-            onClick={handleLogin}
-            className={`btn btn-primary w-full mt-4 ${loading ? "loading" : ""}`}
-          >
-            Login
-          </button>
+            <button
+              type="submit"
+              className={`btn btn-primary w-full mt-4 ${loading ? "loading" : ""}`}
+            >
+              Login
+            </button>
+          </form>
 
         </div>
       </div>
