@@ -21,44 +21,54 @@ const FeedCard = ({ info }) => {
   };
 
   return (
-    <div className="relative w-96 h-[550px] rounded-2xl shadow-xl overflow-hidden flex flex-col">
+    <div className="w-[360px] rounded-2xl bg-[#1e293b] shadow-2xl overflow-hidden border border-white/10 hover:scale-[1.02] transition">
 
-      {/* Image */}
-      <div className="w-full h-3/4">
+      {/* IMAGE SECTION */}
+      <div className="h-[320px] bg-black">
         <img
-          src={info?.photoUrl}
-          alt="User"
+          src={info?.photoUrl || "/avatar.png"}
+          alt="profile"
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Profile Info */}
-      <div className="px-4 py-3">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-bold">
+      {/* INFO SECTION */}
+      <div className="p-4 text-white">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">
             {info?.firstName} {info?.lastName}
           </h2>
-          {info?.age && <span className="text-gray-500">{info.age}</span>}
-          <FaCheckCircle className="text-blue-500" />
+
+          <FaCheckCircle className="text-blue-500 text-sm" />
         </div>
-        <p className="text-gray-600 text-sm mt-1">
-          {info?.about}
+
+        {info?.age && (
+          <p className="text-sm text-gray-400 mt-1">
+            {info.age} years old
+          </p>
+        )}
+
+        <p className="text-sm text-gray-300 mt-3 line-clamp-3">
+          {info?.about || "This is a default about of the user!"}
         </p>
       </div>
 
-      {/* Actions */}
-      <div className="absolute bottom-4 w-full flex justify-evenly">
+      {/* ACTION BUTTONS */}
+      <div className="flex justify-between items-center px-6 py-4 bg-[#0f172a]">
         <button
           onClick={() => handleSendRequest("ignored", info?._id)}
-          className="w-12 h-12 bg-red-500 text-white rounded-full shadow flex items-center justify-center"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"
         >
           <FaTimes />
+          Ignore
         </button>
+
         <button
           onClick={() => handleSendRequest("interested", info?._id)}
-          className="w-12 h-12 bg-green-500 text-white rounded-full shadow flex items-center justify-center"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 text-pink-400 hover:bg-pink-500 hover:text-white transition"
         >
           <FaHeart />
+          Interested
         </button>
       </div>
     </div>

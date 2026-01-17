@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
+import { Toaster } from "react-hot-toast";
+
 import appStore from "./utils/appStore";
 
 import Body from "./components/Body";
@@ -13,11 +15,14 @@ function App() {
   return (
     <Provider store={appStore}>
       <BrowserRouter>
-        <Routes>
 
+        {/* ✅ Global Toast Container */}
+        <Toaster position="top-right" reverseOrder={false} />
+
+        <Routes>
           {/* Layout */}
           <Route path="/" element={<Body />}>
-
+            
             {/* LANDING PAGE */}
             <Route index element={<Landing />} />
 
@@ -30,8 +35,8 @@ function App() {
             <Route path="profile" element={<Profile />} />
 
           </Route>
-
         </Routes>
+
       </BrowserRouter>
     </Provider>
   );

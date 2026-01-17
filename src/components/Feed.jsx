@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";                // ✅ ADDED
 
 import { addFeed } from "../utils/feedSlice";
 import FeedCard from "./FeedCard";
@@ -23,6 +24,7 @@ const Feed = () => {
       dispatch(addFeed(res.data.data));
     } catch (err) {
       console.error("Failed to fetch feed", err);
+      toast.error("Failed to load feed");           // ✅ USER FEEDBACK
     }
   };
 
@@ -30,8 +32,10 @@ const Feed = () => {
     fetchFeed();
   }, []);
 
-  // Loading state
-  if (!feed || feed.length === 0) {
+  // ==========================
+  // LOADING STATE
+  // ==========================
+  if (feed === null) {
     return <ShimmerCard />;
   }
 
@@ -47,8 +51,10 @@ const Feed = () => {
             className="w-80 h-60 object-cover rounded-lg shadow-md"
           />
           <div>
-            <h2 className="text-2xl font-bold">Your feed is empty</h2>
-            <p className="mt-2">
+            <h2 className="text-2xl font-bold">
+              Your feed is empty
+            </h2>
+            <p className="mt-2 text-gray-500">
               Looks like there are no developers to show right now.
             </p>
           </div>
