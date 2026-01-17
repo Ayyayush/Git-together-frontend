@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
+import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../utils/constants";
 
 const Login = () => {
   const [emailId, setEmailId] = useState("");
@@ -7,24 +11,25 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const handleLogin = async () => {
     try {
       setLoading(true);
       setError("");
 
       const res = await axios.post(
-        "http://localhost:7777/login",
-        {
-          emailId,
-          password,
-        },
-        {
-          withCredentials: true, // 🔐 VERY IMPORTANT
-        }
+        `${BASE_URL}`,
+        { emailId, password },
+        { withCredentials: true }
       );
 
-      console.log("Login success:", res.data);
-      // later: navigate("/feed")
+      // ✅ Save user data in Redux
+      dispatch(addUser(res.data));
+
+      // ✅ Redirect after login
+      navigate("/feed");
 
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -34,8 +39,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-200 to-base-300 px-4">
-      <div className="card w-full max-w-sm bg-base-100 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <div className="card w-96 bg-base-100 shadow-xl">
         <div className="card-body">
 
           <h2 className="text-2xl font-bold text-center">
@@ -44,10 +49,9 @@ const Login = () => {
 
           {/* Email */}
           <label className="form-control w-full mt-4">
-            <span className="label-text font-medium">Email</span>
+            <span className="label-text">Email</span>
             <input
               type="email"
-              placeholder="you@example.com"
               className="input input-bordered w-full"
               value={emailId}
               onChange={(e) => setEmailId(e.target.value)}
@@ -56,10 +60,9 @@ const Login = () => {
 
           {/* Password */}
           <label className="form-control w-full mt-3">
-            <span className="label-text font-medium">Password</span>
+            <span className="label-text">Password</span>
             <input
               type="password"
-              placeholder="••••••••"
               className="input input-bordered w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -67,24 +70,15 @@ const Login = () => {
           </label>
 
           {/* Error */}
-          {error && (
-            <p className="text-error text-sm mt-2">{error}</p>
-          )}
+          {error && <p className="text-error text-sm mt-2">{error}</p>}
 
           {/* Button */}
           <button
             onClick={handleLogin}
-            className={`btn btn-primary w-full mt-5 ${loading ? "loading" : ""}`}
+            className={`btn btn-primary w-full mt-4 ${loading ? "loading" : ""}`}
           >
             Login
           </button>
-
-          <p className="text-center text-sm text-gray-500 mt-3">
-            New here?{" "}
-            <span className="text-primary cursor-pointer hover:underline">
-              Create an account
-            </span>
-          </p>
 
         </div>
       </div>
