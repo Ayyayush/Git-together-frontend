@@ -1,23 +1,25 @@
 const ShimmerCard = () => {
   return (
-    <div className="flex-1 flex items-center justify-center overflow-y-auto p-8">
-      <div className="p-4 max-w-sm w-full mx-auto h-[550px] shadow-lg rounded-lg bg-base-100">
-        
-        {/* Image shimmer */}
-        <div className="bg-gray-300 h-60 rounded-lg shimmer-animation"></div>
+    <div className="flex-1 flex items-center justify-center p-6">
+      <div
+        className="w-full max-w-sm h-[520px]
+                   rounded-xl bg-base-100 shadow-lg
+                   p-4 animate-pulse"
+      >
+        {/* Image / Photo */}
+        <div className="h-64 w-full rounded-lg bg-gray-300"></div>
 
-        {/* Text shimmer */}
-        <div className="mt-4 space-y-2">
-          <div className="h-4 bg-gray-300 rounded shimmer-animation"></div>
-          <div className="h-4 w-3/4 bg-gray-300 rounded shimmer-animation"></div>
+        {/* Name + About */}
+        <div className="mt-5 space-y-3">
+          <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
+          <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
         </div>
 
-        {/* Action buttons shimmer */}
-        <div className="mt-6 flex justify-center space-x-4">
-          <div className="h-10 w-10 bg-gray-300 rounded-full shimmer-animation"></div>
-          <div className="h-10 w-10 bg-gray-300 rounded-full shimmer-animation"></div>
+        {/* Action buttons */}
+        <div className="mt-8 flex justify-center gap-6">
+          <div className="h-12 w-12 bg-gray-300 rounded-full"></div>
+          <div className="h-12 w-12 bg-gray-300 rounded-full"></div>
         </div>
-
       </div>
     </div>
   );

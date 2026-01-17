@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "../utils/userSlice";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 
@@ -10,9 +10,6 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ==========================
-  // Logout handler (IMPORTANT ADD)
-  // ==========================
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -20,7 +17,6 @@ const Navbar = () => {
         {},
         { withCredentials: true }
       );
-
       dispatch(removeUser());
       navigate("/login");
     } catch (err) {
@@ -29,59 +25,68 @@ const Navbar = () => {
   };
 
   return (
-    <div className="navbar bg-base-100 shadow-md px-3 sm:px-4 md:px-8">
+    <div className="navbar bg-base-100 shadow-md px-3 sm:px-6">
 
-      {/* LEFT: Logo + Brand */}
-      <div className="flex items-center flex-shrink-0">
+      {/* LEFT: Logo */}
+      <div
+        className="flex items-center gap-2 cursor-pointer shrink-0"
+        onClick={() => navigate("/")}
+      >
         <img
           src={logo}
           alt="Gittogether Logo"
-          className="w-8 h-8 object-contain"
+          className="w-9 h-9 object-contain"
         />
-        <span className="ml-2 text-lg sm:text-xl font-bold tracking-wide whitespace-nowrap">
+
+        {/* Hide text on very small screens */}
+        <span className="hidden sm:block text-lg font-bold tracking-wide">
           Gittogether
         </span>
       </div>
 
-      {/* CENTER: Search (ONLY when user is logged in) */}
+      {/* CENTER: Search (Desktop only) */}
       {user && (
-        <div className="hidden md:flex flex-1 justify-center px-4">
+        <div className="hidden md:flex flex-1 justify-center px-6">
           <input
             type="text"
             placeholder="Search developers"
-            className="input input-bordered w-full max-w-xs"
+            className="input input-bordered w-full max-w-sm"
           />
         </div>
       )}
 
       {/* RIGHT: Actions */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
 
-        {/* Mobile search icon (ONLY after login) */}
+        {/* Mobile Search Icon */}
         {user && (
           <button className="btn btn-ghost btn-circle md:hidden">
             🔍
           </button>
         )}
 
-        {/* Notifications (ONLY after login) */}
+        {/* Notification */}
         {user && (
           <button className="btn btn-ghost btn-circle">
             🔔
           </button>
         )}
 
-        {/* If NOT logged in → Login button */}
+        {/* Login Button */}
         {!user && (
           <button
             onClick={() => navigate("/login")}
-            className="btn btn-primary btn-sm"
+            className="px-5 py-2 rounded-full
+                       bg-gradient-to-r from-blue-600 to-indigo-600
+                       text-white font-semibold
+                       shadow hover:shadow-lg
+                       transition-transform hover:scale-105"
           >
             Login
           </button>
         )}
 
-        {/* Profile dropdown (ONLY when logged in) */}
+        {/* Profile Dropdown */}
         {user && (
           <div className="dropdown dropdown-end">
             <div
@@ -89,7 +94,7 @@ const Navbar = () => {
               role="button"
               className="btn btn-ghost btn-circle avatar"
             >
-              <div className="w-9 sm:w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+              <div className="w-9 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                 <img
                   alt="User Avatar"
                   src={
@@ -102,17 +107,15 @@ const Navbar = () => {
 
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content mt-3 w-52 rounded-box bg-base-100 shadow-lg z-[10]"
+              className="menu menu-sm dropdown-content mt-3 w-52 rounded-box bg-base-100 shadow-lg z-[20]"
             >
               <li className="px-2 py-1 text-sm font-semibold truncate">
                 {user.firstName || user.emailId}
               </li>
 
-              <li>
-                <a onClick={() => navigate("/profile")}>Profile</a>
-              </li>
-
-              <li><a>Settings</a></li>
+              <li><a onClick={() => navigate("/profile")}>Profile</a></li>
+              <li><Link to="/connections">Connections</Link></li>
+              <li><Link to="/requests">Connection Requests</Link></li>
 
               <li>
                 <a
@@ -125,7 +128,6 @@ const Navbar = () => {
             </ul>
           </div>
         )}
-
       </div>
     </div>
   );
