@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "./userSlice";   // adjust path if needed
+import userReducer from "./userSlice";
+import feedReducer from "./feedSlice";
 
 const appStore = configureStore({
   reducer: {
-    user: userReducer,   // ✅ CONNECT user slice to store
+    user: userReducer,   // logged-in user data
+    feed: feedReducer,   // feed users list
   },
 });
 

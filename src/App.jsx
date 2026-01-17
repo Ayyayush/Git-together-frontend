@@ -3,9 +3,11 @@ import { Provider } from "react-redux";
 import appStore from "./utils/appStore";
 
 import Body from "./components/Body";
+import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Profile from "./components/Profile";
 import Feed from "./components/Feed";
+import Signup from "./components/Signup";
 
 function App() {
   return (
@@ -13,14 +15,17 @@ function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* Layout Route */}
+          {/* Layout */}
           <Route path="/" element={<Body />}>
 
-            {/* Default route */}
-            <Route index element={<Login />} />
+            {/* LANDING PAGE */}
+            <Route index element={<Landing />} />
 
-            {/* Public routes */}
+            {/* AUTH */}
             <Route path="login" element={<Login />} />
+            <Route path="signup" element={<Signup />} />
+
+            {/* PROTECTED */}
             <Route path="feed" element={<Feed />} />
             <Route path="profile" element={<Profile />} />
 
