@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "../utils/userSlice";
 import { toggleSibeBar } from "../utils/sidebarSlice";
 import { toggleTheme } from "../utils/themeSlice";
+import { setSearch } from "../utils/feedSlice";
 
 import logo from "../assets/logo.png";
 import { useNavigate, Link } from "react-router-dom";
@@ -19,12 +20,14 @@ import {
   FaSignOutAlt,
   FaUsers,
   FaHandshake,
+  FaSearch,                 // ✅ NEW
 } from "react-icons/fa";
 
 const Navbar = () => {
   const user = useSelector((state) => state.user);
   const { sidebar } = useSelector((state) => state.sideBar);
   const { theme } = useSelector((state) => state.theme);
+  const search = useSelector((state) => state.feed.search);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,7 +40,7 @@ const Navbar = () => {
         { withCredentials: true }
       );
       dispatch(removeUser());
-      navigate("/"); // ✅ Landing page
+      navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -51,7 +54,7 @@ const Navbar = () => {
           : "bg-base-100 text-gray-800"
       }`}
     >
-      {/* LEFT */}
+      {/* ================= LEFT ================= */}
       <div className="flex items-center gap-2 shrink-0">
         {user && (
           <button
@@ -73,18 +76,39 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* CENTER */}
+      {/* ================= CENTER (SPORTY SEARCH) ================= */}
       {user && (
         <div className="hidden md:flex flex-1 justify-center px-6">
-          <input
-            type="text"
-            placeholder="Search developers"
-            className="input input-bordered w-full max-w-sm"
-          />
+          <div
+            className={`relative w-full max-w-md
+                        rounded-full
+                        backdrop-blur-lg
+                        border border-white/20
+                        ${
+                          theme === "dark"
+                            ? "bg-white/10"
+                            : "bg-gray-100"
+                        }`}
+          >
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+
+            <input
+              type="text"
+              placeholder="Search developers…"
+              value={search}
+              onChange={(e) => dispatch(setSearch(e.target.value))}
+              className="w-full pl-11 pr-4 py-2 rounded-full
+                         bg-transparent
+                         text-white placeholder-gray-400
+                         focus:outline-none
+                         focus:ring-2 focus:ring-blue-500/50
+                         transition"
+            />
+          </div>
         </div>
       )}
 
-      {/* RIGHT */}
+      {/* ================= RIGHT ================= */}
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         {user && (
           <>
@@ -107,13 +131,16 @@ const Navbar = () => {
         {!user && (
           <button
             onClick={() => navigate("/login")}
-            className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow hover:scale-105 transition"
+            className="px-5 py-2 rounded-full
+                       bg-gradient-to-r from-blue-600 to-indigo-600
+                       text-white font-semibold shadow
+                       hover:scale-105 transition"
           >
             Login
           </button>
         )}
 
-        {/* STYLED DROPDOWN */}
+        {/* ================= PROFILE DROPDOWN ================= */}
         {user && (
           <div className="dropdown dropdown-end">
             <div tabIndex={0} className="btn btn-ghost btn-circle avatar">
@@ -128,7 +155,6 @@ const Navbar = () => {
                 ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white"}
               `}
             >
-              {/* Header */}
               <li className="px-3 py-2 text-sm font-semibold opacity-80 cursor-default">
                 {user.firstName || user.emailId}
               </li>
@@ -168,7 +194,8 @@ const Navbar = () => {
               <li>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-3 text-error font-semibold hover:bg-error hover:text-white"
+                  className="flex items-center gap-3 text-error font-semibold
+                             hover:bg-error hover:text-white rounded-lg"
                 >
                   <FaSignOutAlt /> Logout
                 </button>

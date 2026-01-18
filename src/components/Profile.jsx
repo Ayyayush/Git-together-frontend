@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import toast from "react-hot-toast";                // ✅ ADDED
+import toast from "react-hot-toast";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 
@@ -19,9 +19,10 @@ const Profile = () => {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // ==========================
-  // Prefill from redux
+  // Prefill form from redux
   // ==========================
   useEffect(() => {
     if (user) {
@@ -36,6 +37,9 @@ const Profile = () => {
     }
   }, [user]);
 
+  // ==========================
+  // Input handler
+  // ==========================
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -48,6 +52,8 @@ const Profile = () => {
     setError("");
 
     try {
+      setLoading(true);
+
       const res = await axios.patch(
         `${BASE_URL}/profile/edit`,
         formData,
@@ -55,11 +61,13 @@ const Profile = () => {
       );
 
       dispatch(addUser(res.data.user));
-      toast.success("Profile updated successfully");     // ✅ ADDED
+      toast.success("Profile updated successfully");
     } catch (err) {
-      const msg = err.response?.data?.message || "Update failed";
+      const msg = err.response?.data?.message || "Profile update failed";
       setError(msg);
-      toast.error(msg);                                  // ✅ ADDED
+      toast.error(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,155 +78,197 @@ const Profile = () => {
   // ==========================
   const userMeta = [
     formData.age && `${formData.age} yrs`,
-    formData.gender && formData.gender.toLowerCase(),
+    formData.gender && formData.gender,
   ]
     .filter(Boolean)
-    .join(", ");
-
-  const fullDescription =
-    formData.about ||
-    `${formData.firstName} ${formData.lastName} is a developer on Gittogether.`;
+    .join(" • ");
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="flex-1 overflow-y-auto bg-base-200 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* ================= EDIT FORM ================= */}
-        <div className="p-6 rounded-lg shadow-lg bg-base-100">
-          <h2 className="text-2xl font-bold mb-6">Edit Profile</h2>
+        {/* ================= EDIT PROFILE FORM ================= */}
+        <div className="bg-base-100 rounded-2xl shadow-xl p-6">
+          <h2 className="text-2xl font-bold mb-6 text-center lg:text-left">
+            Edit Profile
+          </h2>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
 
-            {/* First Name */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                First Name
-              </label>
-              <input
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Enter first name"
-                className="input input-bordered w-full"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* First Name */}
+              <div>
+                <label className="label">
+                  <span className="label-text font-medium">First Name</span>
+                </label>
+                <input
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="First name"
+                />
+              </div>
 
-            {/* Last Name */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Last Name
-              </label>
-              <input
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Enter last name"
-                className="input input-bordered w-full"
-              />
+              {/* Last Name */}
+              <div>
+                <label className="label">
+                  <span className="label-text font-medium">Last Name</span>
+                </label>
+                <input
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Last name"
+                />
+              </div>
             </div>
 
             {/* Photo URL */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Profile Photo URL
+              <label className="label">
+                <span className="label-text font-medium">Profile Photo URL</span>
               </label>
               <input
                 name="photoUrl"
                 value={formData.photoUrl}
                 onChange={handleChange}
+                className="input input-bordered w-full"
                 placeholder="Paste image URL"
-                className="input input-bordered w-full"
               />
             </div>
 
-            {/* Age */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Age
-              </label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder="Enter age"
-                className="input input-bordered w-full"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Age */}
+              <div>
+                <label className="label">
+                  <span className="label-text font-medium">Age</span>
+                </label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Age"
+                />
+              </div>
 
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Gender
-              </label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="select select-bordered w-full"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Others">Others</option>
-              </select>
+              {/* Gender */}
+              <div>
+                <label className="label">
+                  <span className="label-text font-medium">Gender</span>
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="select select-bordered w-full"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
             </div>
 
             {/* About */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                About
+              <label className="label">
+                <span className="label-text font-medium">About</span>
               </label>
               <textarea
                 name="about"
                 value={formData.about}
                 onChange={handleChange}
-                placeholder="Write something about yourself"
                 className="textarea textarea-bordered w-full"
+                rows={4}
+                placeholder="Tell something about yourself"
               />
             </div>
 
-            {error && (
-              <p className="text-error text-sm">{error}</p>
-            )}
+            {error && <p className="text-error text-sm">{error}</p>}
 
-            <button className="btn btn-primary w-full">
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
+            >
               Save Profile
             </button>
           </form>
         </div>
 
-        {/* ================= LIVE PREVIEW ================= */}
-        <div className="p-6 rounded-lg shadow-lg bg-base-100 text-center">
-          <img
-            src={
-              formData.photoUrl ||
-              "https://cdn-icons-png.flaticon.com/512/847/847969.png"
-            }
-            alt="Profile"
-            className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover"
-          />
+        {/* ================= LIVE PROFILE PREVIEW ================= */}
+        <div className="bg-base-100 rounded-2xl shadow-xl p-8 text-center">
 
-          <h3 className="text-xl font-semibold">
+          {/* Avatar */}
+          <div className="relative w-40 h-40 mx-auto mb-6">
+            <img
+              src={
+                formData.photoUrl ||
+                "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+              }
+              alt="Profile"
+              className="
+                w-full h-full rounded-full object-cover
+                ring-4 ring-primary
+                ring-offset-4 ring-offset-base-100
+                shadow-[0_0_35px_rgba(59,130,246,0.45)]
+              "
+            />
+          </div>
+
+          {/* Name */}
+          <h3 className="text-2xl font-bold tracking-wide">
             {formData.firstName} {formData.lastName}
           </h3>
 
+          {/* Meta */}
           {userMeta && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-400 mt-1 uppercase tracking-widest">
               {userMeta}
             </p>
           )}
 
-          <p className="text-sm mt-3 text-gray-600">
-            {fullDescription}
+          {/* About */}
+          <p className="text-sm mt-4 text-gray-300 leading-relaxed max-w-sm mx-auto">
+            {formData.about ||
+              "Passionately curious developer on Gittogether"}
           </p>
 
-          <div className="mt-6 flex justify-center gap-4">
-            <button className="btn btn-outline btn-sm">Ignore</button>
-            <button className="btn btn-primary btn-sm">Interested</button>
-          </div>
-        </div>
+          {/* Action Buttons */}
+          <div className="mt-8 flex justify-center gap-6">
+            <button
+              className="
+                px-7 py-2 rounded-full
+                border border-gray-500
+                text-gray-300
+                hover:bg-gray-700 hover:text-white
+                transition-all duration-300
+                tracking-wide
+              "
+            >
+              Ignore
+            </button>
 
+            <button
+              className="
+                px-8 py-2 rounded-full
+                bg-gradient-to-r from-blue-500 to-indigo-600
+                text-white font-semibold
+                shadow-lg shadow-blue-500/40
+                hover:scale-105 hover:shadow-indigo-500/60
+                transition-all duration-300
+                tracking-wide
+              "
+            >
+              Interested
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   );
