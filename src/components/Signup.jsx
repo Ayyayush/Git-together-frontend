@@ -5,6 +5,7 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { FaEye } from "react-icons/fa6";
 import { FaEyeSlash } from "react-icons/fa";
+import { signupValidation } from "../utils/validation";
 
 const Signup = () => {
   const [user, setUser] = useState({
@@ -24,14 +25,9 @@ const Signup = () => {
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
-    setError("");
 
-    // ✅ Basic validation
-    const { firstName, lastName, emailId, password } = user;
-    if (!firstName || !lastName || !emailId || !password) {
-      setError("All fields are required");
-      return;
-    }
+    const isValid = signupValidation({ user, setError });
+    if (!isValid) return;
 
     try {
       await axios.post(
@@ -40,9 +36,7 @@ const Signup = () => {
         { withCredentials: true }
       );
 
-      // ✅ Redirect to login after successful signup
       navigate("/login");
-
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed");
     }

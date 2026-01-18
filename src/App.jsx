@@ -7,11 +7,14 @@ import appStore from "./utils/appStore";
 import Body from "./components/Body";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
-import Profile from "./components/Profile";
-import Feed from "./components/Feed";
 import Signup from "./components/Signup";
+import Feed from "./components/Feed";
+import Profile from "./components/Profile";
 import Connections from "./components/Connections";
 import Requests from "./components/Requests";
+import Notification from "./components/Notification";
+import Message from "./components/Message";
+import NotFoundPage from "./components/NotFoundPage";
 
 function App() {
   return (
@@ -24,8 +27,8 @@ function App() {
         <Routes>
           {/* Layout */}
           <Route path="/" element={<Body />}>
-            
-            {/* LANDING PAGE */}
+
+            {/* LANDING */}
             <Route index element={<Landing />} />
 
             {/* AUTH */}
@@ -35,8 +38,15 @@ function App() {
             {/* PROTECTED */}
             <Route path="feed" element={<Feed />} />
             <Route path="profile" element={<Profile />} />
-             <Route path="connections" element={<Connections/>} />
-              <Route path="requests" element={<Requests />} />
+
+            {/* MATCH SIDEBAR */}
+            <Route path="connection" element={<Connections />} />
+            <Route path="request" element={<Requests />} />
+            <Route path="notification" element={<Notification />} />
+            <Route path="message" element={<Message />} />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
 
           </Route>
         </Routes>

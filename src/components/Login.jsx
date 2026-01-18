@@ -1,90 +1,131 @@
-import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import swipe from "../assets/swipe.gif";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
-import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
+import { loginValidation } from "../utils/validation";
 
 const Login = () => {
-  const [emailId, setEmailId] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState({
+    emailId: "",
+    password: "",
+  });
+
   const [error, setError] = useState("");
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleInputData = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
+  };
 
-    if (!emailId || !password) {
-      setError("Email and password are required");
-      return;
+  const fetchUserData = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/profile/view`, {
+        withCredentials: true,
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error(error);
     }
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const isValid = loginValidation({ user, setError });
+    if (!isValid) return;
 
     try {
-      setLoading(true);
-      setError("");
-
-      const res = await axios.post(
+      const response = await axios.post(
         `${BASE_URL}/login`,
-        { emailId, password },
+        user,
         { withCredentials: true }
       );
 
-      // backend sends { message, user }
-      dispatch(addUser(res.data.user));
+      toast.success(response?.data?.message || "Login successful");
+
+      const userData = await fetchUserData();
+      dispatch(addUser(userData));
 
       navigate("/feed");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setError(error?.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-96 bg-base-100 shadow-xl">
-        <div className="card-body">
-
-          <h2 className="text-2xl font-bold text-center">
-            Login to <span className="text-primary">Gittogether</span>
+    <div className="flex flex-col lg:flex-row h-full">
+      {/* LEFT : LOGIN FORM */}
+      <div className="flex-1 flex flex-col justify-center items-center p-8">
+        <div className="max-w-md w-full shadow-lg p-4 rounded-lg">
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Welcome 🙌, Gittogether
           </h2>
+          <p className="text-center text-gray-400 mb-8">
+            Welcome back, please enter your details.
+          </p>
 
-          <form onSubmit={handleLogin}>
-            <label className="form-control w-full mt-4">
-              <span className="label-text">Email</span>
+          <form className="space-y-6" onSubmit={handleFormSubmit}>
+            <div>
+              <label className="block text-sm font-medium">Email</label>
               <input
                 type="email"
-                className="input input-bordered w-full"
-                value={emailId}
-                onChange={(e) => setEmailId(e.target.value)}
+                name="emailId"
+                value={user.emailId}
+                onChange={handleInputData}
+                className="mt-1 w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring focus:ring-blue-500"
+                placeholder="Enter your email"
               />
-            </label>
+            </div>
 
-            <label className="form-control w-full mt-3">
-              <span className="label-text">Password</span>
+            <div>
+              <label className="block text-sm font-medium">Password</label>
               <input
                 type="password"
-                className="input input-bordered w-full"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
+                value={user.password}
+                onChange={handleInputData}
+                className="mt-1 w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring focus:ring-blue-500"
+                placeholder="Enter your password"
               />
-            </label>
+            </div>
 
             {error && (
-              <p className="text-error text-sm mt-2">{error}</p>
+              <div className="text-red-500 text-sm">{error}</div>
             )}
 
             <button
               type="submit"
-              className={`btn btn-primary w-full mt-4 ${loading ? "loading" : ""}`}
+              className="w-full py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700"
             >
               Login
             </button>
           </form>
 
+          <p className="text-center mt-4">
+            {"Don't have an account?"}{" "}
+            <Link to="/signup" className="text-blue-500 underline">
+              Sign up for free
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT : IMAGE (FIXED UI) */}
+      <div className="flex-1 flex justify-center items-center relative">
+        {/* Oval background */}
+        <div className="w-[320px] h-[320px] bg-pink-200 rounded-full flex items-center justify-center translate-x-8 shadow-xl">
+          <img
+            src={swipe}
+            alt="Login Illustration"
+            className="w-64 h-64 object-contain rounded-full"
+          />
         </div>
       </div>
     </div>
