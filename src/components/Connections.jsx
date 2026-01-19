@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import noConnectionsImg from "../assets/connections.png";   // background image
 
 import { addConnections } from "../utils/connectionSlice";
 import { BASE_URL } from "../utils/constants";
@@ -14,7 +15,7 @@ const Connections = () => {
   const fetchConnections = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/user/connections`,   // ✅ FIXED ROUTE
+        `${BASE_URL}/user/connections`,
         { withCredentials: true }
       );
 
@@ -37,9 +38,12 @@ const Connections = () => {
   }
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-8 relative">
       <h1 className="text-2xl font-bold mb-6">Your Connections</h1>
 
+      {/* ==========================
+          If connections exist
+      ========================== */}
       {connections.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {connections.map((user) => (
@@ -68,9 +72,24 @@ const Connections = () => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">
-          You don’t have any connections yet.
-        </p>
+        /* ==========================
+           Empty State with Background Image
+        ========================== */
+        <div
+          className="flex items-center justify-center h-[60vh] rounded-xl"
+          style={{
+            backgroundImage: `url(${noConnectionsImg})`, // background image
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "contain",
+          }}
+        >
+          <div className="bg-black/50 text-white px-6 py-3 rounded-lg">
+            <p className="text-lg font-medium">
+              You don’t have any connections yet
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

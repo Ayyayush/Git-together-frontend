@@ -7,6 +7,7 @@ import {
 } from "../utils/requestSlice";
 import { BASE_URL } from "../utils/constants";
 import ShimmerCard from "./Shimmer";
+import noRequestsImg from "../assets/requests.png";   // background image
 
 const Requests = () => {
   const dispatch = useDispatch();
@@ -59,9 +60,29 @@ const Requests = () => {
         Connection Requests
       </h1>
 
+      {/* ==========================
+          Empty State
+      ========================== */}
       {receivedRequests.length === 0 ? (
-        <p className="text-gray-500">No pending requests</p>
+        <div
+          className="flex items-center justify-center h-[60vh] rounded-xl"
+          style={{
+            backgroundImage: `url(${noRequestsImg})`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "contain",
+          }}
+        >
+          <div className="bg-black/50 text-white px-6 py-3 rounded-lg">
+            <p className="text-lg font-medium">
+              No pending connection requests
+            </p>
+          </div>
+        </div>
       ) : (
+        /* ==========================
+           Requests List
+        ========================== */
         <div className="space-y-4">
           {receivedRequests.map((req) => (
             <div
