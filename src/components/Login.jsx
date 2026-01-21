@@ -60,15 +60,24 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* MOBILE IMAGE */}
+      <div className="flex lg:hidden justify-center mt-6 mb-4">
+        <img
+          src={swipe}
+          alt="Login Illustration"
+          className="w-40 h-40 object-contain"
+        />
+      </div>
+
       {/* LEFT : LOGIN FORM */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8">
-        <div className="max-w-md w-full shadow-lg p-4 rounded-lg">
-          <h2 className="text-3xl font-bold text-center mb-4">
-            Welcome 🙌, Gittogether
+      <div className="flex flex-1 items-center justify-center px-4 sm:px-8">
+        <div className="w-full max-w-md shadow-lg p-6 rounded-lg">
+          <h2 className="text-3xl font-bold text-center mb-2">
+            Welcome back 👋
           </h2>
           <p className="text-center text-gray-400 mb-8">
-            Welcome back, please enter your details.
+            Sign in to continue to GitTogether
           </p>
 
           <form className="space-y-6" onSubmit={handleFormSubmit}>
@@ -97,7 +106,9 @@ const Login = () => {
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-red-500 text-sm text-center">
+                {error}
+              </div>
             )}
 
             <button
@@ -117,10 +128,9 @@ const Login = () => {
         </div>
       </div>
 
-      {/* RIGHT : IMAGE (FIXED UI) */}
-      <div className="flex-1 flex justify-center items-center relative">
-        {/* Oval background */}
-        <div className="w-[320px] h-[320px] bg-pink-200 rounded-full flex items-center justify-center translate-x-8 shadow-xl">
+      {/* DESKTOP IMAGE */}
+      <div className="hidden lg:flex flex-1 justify-center items-center">
+        <div className="w-[320px] h-[320px] bg-pink-200 rounded-full flex items-center justify-center shadow-xl">
           <img
             src={swipe}
             alt="Login Illustration"
