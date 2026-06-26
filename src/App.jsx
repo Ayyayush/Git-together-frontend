@@ -20,37 +20,30 @@ function App() {
   return (
     <Provider store={appStore}>
       <BrowserRouter>
-
-        {/* ✅ Global Toast Container */}
         <Toaster position="top-right" reverseOrder={false} />
 
         <Routes>
-          {/* Layout */}
           <Route path="/" element={<Body />}>
 
-            {/* LANDING */}
             <Route index element={<Landing />} />
 
-            {/* AUTH */}
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
 
-            {/* PROTECTED */}
             <Route path="feed" element={<Feed />} />
             <Route path="profile" element={<Profile />} />
 
-            {/* MATCH SIDEBAR */}
             <Route path="connection" element={<Connections />} />
             <Route path="request" element={<Requests />} />
             <Route path="notification" element={<Notification />} />
-            <Route path="message" element={<Message />} />
 
-            {/* 404 */}
+            {/* UPDATED */}
+            <Route path="message/:targetUserId" element={<Message />} />
+
             <Route path="*" element={<NotFoundPage />} />
 
           </Route>
         </Routes>
-
       </BrowserRouter>
     </Provider>
   );

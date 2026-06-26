@@ -7,12 +7,25 @@ const NotFoundPage = () => {
 
   return (
     <div
-      className={`h-screen ${
-        theme == "dark" && "bg-gradient-to-b from-gray-900 to-gray-800"
-      } flex flex-col justify-center items-center text-center`}
+      className={`relative h-screen overflow-hidden ${
+        theme == "dark" && "bg-gradient-to-b from-[#0B0E14] to-[#11151d]"
+      } flex flex-col justify-center items-center text-center px-6`}
     >
-      <div className="flex flex-col items-center">
-        <h1 className="text-9xl font-extrabold text-gray-500 select-none">
+      {theme == "dark" && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-[22rem] h-[22rem] bg-cyan-500/10 rounded-full blur-3xl" />
+        </div>
+      )}
+
+      <div className="relative z-10 flex flex-col items-center">
+        <h1
+          className={`text-9xl font-extrabold select-none ${
+            theme == "dark"
+              ? "bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent"
+              : "text-gray-400"
+          }`}
+        >
           404
         </h1>
 
@@ -21,18 +34,21 @@ const NotFoundPage = () => {
           {`The page you're looking for doesn't exist, or it might have been moved. Let's get you back to safety.`}
         </p>
 
-        <div className="mt-8">
+        <div className="mt-8 relative">
+          {theme == "dark" && (
+            <div className="absolute inset-0 bg-indigo-500/10 blur-2xl rounded-2xl" />
+          )}
           <img
             src={not_found}
             alt="404 Illustration"
-            className="w-64 md:w-80 lg:w-96 rounded-lg shadow-lg"
+            className="relative w-64 md:w-80 lg:w-96 rounded-2xl shadow-2xl shadow-black/40 ring-1 ring-white/10"
           />
         </div>
 
         <div className="mt-8 space-x-4">
           <Link
             to={"/feed"}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-blue-600 transition"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-7 py-3 rounded-full font-semibold shadow-lg shadow-indigo-500/30 hover:scale-105 hover:shadow-cyan-500/40 transition-all duration-300"
           >
             Back to Home
           </Link>

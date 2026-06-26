@@ -32,9 +32,9 @@ const CreatedBy = () => {
         <div
           className="absolute bottom-full mb-3 right-0
                      w-60 rounded-xl
-                     bg-[#0F172A]/95 backdrop-blur-md
+                     bg-[#11151d]/95 backdrop-blur-md
                      border border-white/10
-                     shadow-xl
+                     shadow-2xl shadow-black/40
                      p-4 z-50"
         >
           <p className="text-sm font-semibold text-white mb-3">
@@ -48,8 +48,8 @@ const CreatedBy = () => {
               target="_blank"
               rel="noreferrer"
               className="w-9 h-9 flex items-center justify-center rounded-full
-                         bg-blue-500/10 text-blue-400
-                         hover:bg-blue-500 hover:text-white
+                         bg-indigo-500/10 text-indigo-300
+                         hover:bg-indigo-500 hover:text-white
                          transition"
               title="LinkedIn"
             >
@@ -62,7 +62,7 @@ const CreatedBy = () => {
               target="_blank"
               rel="noreferrer"
               className="w-9 h-9 flex items-center justify-center rounded-full
-                         bg-gray-500/10 text-gray-300
+                         bg-white/5 text-gray-300
                          hover:bg-gray-700 hover:text-white
                          transition"
               title="GitHub"
@@ -80,9 +80,9 @@ const CreatedBy = () => {
 
 const Footer = () => {
   return (
-    <footer className="relative bg-[#0B1220] text-gray-400">
+    <footer className="relative bg-[#0B0E14] text-gray-400 border-t border-white/5">
       {/* Subtle Glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-3xl opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-cyan-500/10 blur-3xl opacity-30 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6 py-8">
         {/* TOP */}
@@ -94,10 +94,10 @@ const Footer = () => {
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-white tracking-tight">
                 Gittogether
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Connecting developers, one swipe at a time.
               </p>
             </div>
@@ -108,10 +108,10 @@ const Footer = () => {
             {["About", "Privacy", "Terms", "Contact"].map((item) => (
               <a
                 key={item}
-                className="relative cursor-pointer hover:text-white transition group"
+                className="relative cursor-pointer text-gray-400 hover:text-white transition group"
               >
                 {item}
-                <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-blue-400 transition-all group-hover:w-full" />
+                <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-indigo-400 to-cyan-400 transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
           </div>

@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import swipe from "../assets/swipe.gif";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import { FiMail, FiLock, FiAlertCircle, FiArrowRight } from "react-icons/fi";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
 import { loginValidation } from "../utils/validation";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Login = () => {
   const [user, setUser] = useState({
@@ -60,85 +61,83 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
-      {/* MOBILE IMAGE */}
-      <div className="flex lg:hidden justify-center mt-6 mb-4">
-        <img
-          src={swipe}
-          alt="Login Illustration"
-          className="w-40 h-40 object-contain"
-        />
+    <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0">
+
+      {/* ambient glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-20 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[22rem] h-[22rem] bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* LEFT : LOGIN FORM */}
-      <div className="flex flex-1 items-center justify-center px-4 sm:px-8">
-        <div className="w-full max-w-md shadow-lg p-6 rounded-lg">
-          <h2 className="text-3xl font-bold text-center mb-2">
-            Welcome back 👋
-          </h2>
-          <p className="text-center text-gray-400 mb-8">
-            Sign in to continue to GitTogether
-          </p>
+      <div className="relative z-10 lg:w-1/2 w-full max-w-md flex flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl shadow-black/40 p-8 lg:p-10">
+        <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+          Welcome back 👋
+        </h2>
+        <p className="text-gray-400 mb-8">
+          Sign in to continue to GitTogether
+        </p>
 
-          <form className="space-y-6" onSubmit={handleFormSubmit}>
-            <div>
-              <label className="block text-sm font-medium">Email</label>
-              <input
-                type="email"
-                name="emailId"
-                value={user.emailId}
-                onChange={handleInputData}
-                className="mt-1 w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring focus:ring-blue-500"
-                placeholder="Enter your email"
-              />
+        <form className="space-y-4" onSubmit={handleFormSubmit}>
+          <div className="relative">
+            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+            <input
+              type="email"
+              name="emailId"
+              value={user.emailId}
+              onChange={handleInputData}
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="relative">
+            <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+            <input
+              type="password"
+              name="password"
+              value={user.password}
+              onChange={handleInputData}
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              <FiAlertCircle size={14} />
+              {error}
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={user.password}
-                onChange={handleInputData}
-                className="mt-1 w-full p-3 border rounded text-gray-800 focus:outline-none focus:ring focus:ring-blue-500"
-                placeholder="Enter your password"
-              />
-            </div>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 py-3 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-cyan-500/40 hover:brightness-110"
+          >
+            Login
+            <FiArrowRight size={16} />
+          </button>
+        </form>
 
-            {error && (
-              <div className="text-red-500 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700"
-            >
-              Login
-            </button>
-          </form>
-
-          <p className="text-center mt-4">
-            {"Don't have an account?"}{" "}
-            <Link to="/signup" className="text-blue-500 underline">
-              Sign up for free
-            </Link>
-          </p>
-        </div>
+        <p className="text-sm mt-6 text-gray-400">
+          {"Don't have an account?"}{" "}
+          <Link to="/signup" className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium">
+            Sign up for free
+          </Link>
+        </p>
       </div>
 
-      {/* DESKTOP IMAGE */}
-      <div className="hidden lg:flex flex-1 justify-center items-center">
-        <div className="w-[320px] h-[320px] bg-pink-200 rounded-full flex items-center justify-center shadow-xl">
-          <img
-            src={swipe}
-            alt="Login Illustration"
-            className="w-64 h-64 object-contain rounded-full"
+      {/* RIGHT : LOTTIE (SAME SIZE & RESPONSIVENESS AS GIF) */}
+      <div className="relative z-10 lg:w-1/2 w-full flex justify-center items-center mt-8 lg:mt-0">
+        <div className="w-full lg:w-4/5">
+          <DotLottieReact
+            src="https://lottie.host/8dd0524f-f3b2-4d4b-b190-f366c609d5b5/xA7UOO5kmG.lottie"
+            loop
+            autoplay
           />
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

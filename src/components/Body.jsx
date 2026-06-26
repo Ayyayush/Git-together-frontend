@@ -24,7 +24,7 @@ const Body = () => {
         withCredentials: true,
       });
 
-      dispatch(addUser(res.data));
+      dispatch(addUser(res.data.data));
     } catch (err) {
       navigate("/login");
     }
@@ -35,7 +35,7 @@ const Body = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0f172a]">
+    <div className="min-h-screen flex flex-col bg-[#0B0E14] text-gray-100">
       <Navbar />
 
       <div className="flex-1">
