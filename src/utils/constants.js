@@ -1,4 +1,4 @@
-export const BASE_URL = "http://localhost:7777"
+export const BASE_URL = "https://git-together-xhn9.onrender.com"
 
 export const DEFAULT_IMG =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png"
