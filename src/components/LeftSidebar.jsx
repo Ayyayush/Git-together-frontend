@@ -49,9 +49,11 @@ const LeftSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
   };
 
   return (
-    <aside className="w-80 max-w-full h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pr-2">
+    // EXACT MATCH: Matched h-[calc(100vh-6rem)] and layout structure with right sidebar
+    <aside className="w-full h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pr-2">
+      
       {/* DEVELOPER CARD */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 shadow-2xl transition-all hover:border-indigo-500/30">
+      <div className="flex-shrink-0 relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl transition-all hover:border-indigo-500/30">
         {user.isPremium && (
           <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-orange-500 text-slate-950 font-black text-[10px] px-3 py-1 rounded-bl-xl flex items-center gap-1 shadow-md uppercase tracking-wider animate-pulse">
             <FaCrown /> {user.premiumType || "PRO"}
@@ -119,28 +121,28 @@ const LeftSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
         )}
       </div>
 
-      {/* QUICK STATS */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-          <span className="text-[10px] text-gray-400 font-medium block">Connections</span>
-          <span className="text-lg font-bold text-gray-100 font-mono">{user.connectionsCount || "142"}</span>
+      {/* QUICK STATS - MATCHED: bg-white/[0.02] sub-panels for clean transparency */}
+      <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl grid grid-cols-2 gap-2.5">
+        <div className="p-3 rounded-xl border border-white/5 bg-white/[0.02] text-center">
+          <span className="text-[9px] text-gray-400 uppercase tracking-wider font-medium block">Connections</span>
+          <span className="text-lg font-bold text-gray-100 font-mono mt-0.5 inline-block">{user.connectionsCount || "142"}</span>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-          <span className="text-[10px] text-gray-400 font-medium block">Pending Requests</span>
-          <span className="text-lg font-bold text-amber-400 font-mono">{user.pendingRequestsCount || "8"}</span>
+        <div className="p-3 rounded-xl border border-white/5 bg-white/[0.02] text-center">
+          <span className="text-[9px] text-gray-400 uppercase tracking-wider font-medium block">Pending</span>
+          <span className="text-lg font-bold text-amber-400 font-mono mt-0.5 inline-block">{user.pendingRequestsCount || "8"}</span>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-          <span className="text-[10px] text-gray-400 font-medium block">Projects</span>
-          <span className="text-lg font-bold text-cyan-400 font-mono">{user.projects?.length || "6"}</span>
+        <div className="p-3 rounded-xl border border-white/5 bg-white/[0.02] text-center">
+          <span className="text-[9px] text-gray-400 uppercase tracking-wider font-medium block">Projects</span>
+          <span className="text-lg font-bold text-cyan-400 font-mono mt-0.5 inline-block">{user.projects?.length || "6"}</span>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-          <span className="text-[10px] text-gray-400 font-medium block">Skills</span>
-          <span className="text-lg font-bold text-purple-400 font-mono">{user.skills?.length || "12"}</span>
+        <div className="p-3 rounded-xl border border-white/5 bg-white/[0.02] text-center">
+          <span className="text-[9px] text-gray-400 uppercase tracking-wider font-medium block">Skills</span>
+          <span className="text-lg font-bold text-purple-400 font-mono mt-0.5 inline-block">{user.skills?.length || "12"}</span>
         </div>
       </div>
 
       {/* QUICK NAVIGATION */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-2.5 shadow-2xl flex flex-col gap-1">
+      <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-2.5 shadow-2xl flex flex-col gap-1">
         <button onClick={() => handleNav("/profile")} className={getNavStyle("/profile")}>
           <FaUserEdit className={`${currentPath === "/profile" ? "text-white" : "text-indigo-400"} text-sm transition-colors`} /> 
           <span>Edit Profile</span>
@@ -167,8 +169,8 @@ const LeftSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
       </div>
 
       {/* DEVELOPER LINKS */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl">
-        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest font-mono mb-3">Developer Links</h4>
+      <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl">
+        <h4 className="text-xs font-bold text-gray-200 uppercase tracking-widest font-mono mb-3">Developer Links</h4>
         <div className="flex flex-wrap gap-2">
           {user.github && (
             <a href={user.github} target="_blank" rel="noreferrer" className="btn btn-square btn-sm bg-white/5 hover:bg-white/10 text-gray-200 border-white/10">
@@ -208,9 +210,9 @@ const LeftSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
         </div>
       </div>
 
-      {/* DEVELOPER STATUS CARD */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl">
-        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
+      {/* CAREER INTERESTS */}
+      <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl">
+        <h4 className="text-xs font-bold text-gray-200 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
           <FaBriefcase className="text-indigo-400" /> Career Interests
         </h4>
         <div className="flex flex-col gap-2">

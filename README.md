@@ -1,13 +1,13 @@
-# 🚀 Gittogether – Frontend (UI)
+# 🚀 GitTogether – Frontend (UI)
 
-Gittogether Frontend is a **production-style React application** built to complement the Gittogether backend.  
+GitTogether Frontend is a **production-style React application** built to complement the GitTogether backend.  
 It follows **real-world frontend architecture**, focuses on **auth persistence, security, clean state management**, and delivers a **polished, responsive UI**.
 
 This is not just UI — it’s a **backend-aware frontend**.
 
 ---
 
-## 🧠 What is Gittogether UI?
+## 🧠 What is GitTogether UI?
 
 The frontend powers a **developer connection platform** where users can:
 
@@ -172,3 +172,5 @@ Inspired by **Namaste React / Namaste Node.js – Akshay Saini**
 ---
 
 ⭐ If you like this project, feel free to star the repository!
+
+as you have seen most of my forntend code now update my readme.md accoridnlgy and give 

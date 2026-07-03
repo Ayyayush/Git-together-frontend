@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "../utils/userSlice";
 import { toggleSibeBar } from "../utils/sidebarSlice"; 
@@ -22,7 +23,7 @@ import {
   FaHandshake,
   FaSearch,
   FaHome,
-  FaCrown, // Added FaCrown icon
+  FaCrown,
 } from "react-icons/fa";
 
 const Navbar = () => {
@@ -33,6 +34,12 @@ const Navbar = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Single source of truth syncs Redux state seamlessly to DOM and Storage
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const handleLogout = async () => {
     try {
@@ -70,7 +77,7 @@ const Navbar = () => {
           >
             <img src={logo} alt="Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
             <span className="hidden sm:block text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent">
-              Gittogether
+              GitTogether
             </span>
           </div>
         </div>
@@ -157,58 +164,58 @@ const Navbar = () => {
               <ul
                 tabIndex={0}
                 className="menu dropdown-content mt-3 w-60 rounded-2xl
-                           bg-[#11151d]/95 backdrop-blur-xl border border-white/10
-                           shadow-2xl shadow-black/50 p-2 z-" // Corrected invalid z- class
+                           bg-base-100 text-base-content backdrop-blur-xl border border-base-300
+                           shadow-2xl shadow-black/50 p-2 z-[999]"
               >
                 {/* Enhanced Dropdown Header Info Stack */}
-                <li className="px-3 pt-2 text-sm font-semibold text-gray-200 truncate">
+                <li className="px-3 pt-2 text-sm font-semibold truncate">
                   {user.firstName || user.emailId}
                 </li>
                 <li className={`px-3 pb-2 text-xs font-medium tracking-wide ${user.isPremium ? "text-yellow-400" : "text-gray-500"}`}>
                   {user.isPremium ? `${user.premiumType || "Gold"} Member` : "Free Member"}
                 </li>
 
-                <div className="divider my-1 before:bg-white/10 after:bg-white/10" />
+                <div className="divider my-1 border-base-300" />
 
                 <li>
-                  <Link to="/feed" className="hover:bg-white/5 active:bg-white/10 rounded-lg">
+                  <Link to="/feed" className="hover:bg-base-200 rounded-lg">
                     <FaHome /> Feed
                   </Link>
                 </li>
                 <li>
-                  <Link to="/profile" className="hover:bg-white/5 active:bg-white/10 rounded-lg">
+                  <Link to="/profile" className="hover:bg-base-200 rounded-lg">
                     <FaUser /> Profile
                   </Link>
                 </li>
                 <li>
-                  <Link to="/connection" className="hover:bg-white/5 active:bg-white/10 rounded-lg">
+                  <Link to="/connection" className="hover:bg-base-200 rounded-lg">
                     <FaUsers /> Connections
                   </Link>
                 </li>
                 <li>
-                  <Link to="/request" className="hover:bg-white/5 active:bg-white/10 rounded-lg">
+                  <Link to="/request" className="hover:bg-base-200 rounded-lg">
                     <FaHandshake /> Requests
                   </Link>
                 </li>
 
-                <div className="divider my-1 before:bg-white/10 after:bg-white/10" />
+                <div className="divider my-2 border-base-300" />
 
                 <li>
                   <button
                     type="button"
                     onClick={() => dispatch(toggleTheme())}
-                    className="hover:bg-white/5 rounded-lg"
+                    className="hover:bg-base-200 transition-all duration-200 py-2 rounded-lg"
                   >
                     {theme === "dark" ? <FaSun /> : <FaMoon />}
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </button>
                 </li>
 
-                <li>
+                <li className="mt-2">
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="text-red-400 font-semibold hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                    className="text-red-400 font-semibold hover:bg-red-500 hover:text-white transition-all duration-200 py-2 rounded-lg"
                   >
                     <FaSignOutAlt /> Logout
                   </button>

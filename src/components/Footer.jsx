@@ -90,12 +90,12 @@ const Footer = () => {
           {/* Brand */}
           <div className="flex items-center gap-4">
             <div className="p-2 rounded-lg bg-white/5 backdrop-blur border border-white/10">
-              <img src={logo} alt="Gittogether Logo" className="w-9 h-9" />
+              <img src={logo} alt="GitTogether Logo" className="w-9 h-9" />
             </div>
 
             <div>
               <h2 className="text-lg font-semibold text-white tracking-tight">
-                Gittogether
+                GitTogether
               </h2>
               <p className="text-xs text-gray-500">
                 Connecting developers, one swipe at a time.
@@ -124,7 +124,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           <p className="text-gray-500">
             © {new Date().getFullYear()}{" "}
-            <span className="text-white">Gittogether</span>. All rights reserved.
+            <span className="text-white">GitTogether</span>. All rights reserved.
           </p>
 
           <CreatedBy />

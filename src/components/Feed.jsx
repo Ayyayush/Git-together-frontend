@@ -62,7 +62,7 @@ const Feed = () => {
   }
 
   return (
-    <main className="relative flex-1 bg-[#0B0E14] min-h-screen w-full overflow-x-hidden pb-20 lg:pb-6">
+    <main className="relative flex-1 bg-[#0B0E14] min-h-screen w-full overflow-hidden pb-20 lg:pb-6">
       <PremiumModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
@@ -92,7 +92,7 @@ const Feed = () => {
         >
           <FaBars size={16} />
         </button>
-        <span className="text-xs font-mono font-black text-indigo-400 tracking-wider">GITTOGETHER FEED</span>
+        <span className="text-xs font-mono font-black text-indigo-400 tracking-wider">GitTogether FEED</span>
         <button 
           onClick={() => setIsRightDrawerOpen(true)}
           className="p-2 text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg transition-colors"

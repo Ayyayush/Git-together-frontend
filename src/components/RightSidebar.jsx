@@ -21,7 +21,11 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
   };
 
   return (
-    <aside className="w-80 max-w-full h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pl-2">
+    // FIX: was `w-80 max-w-full` (fixed 320px). On the xl grid this sits in
+    // `xl:col-span-3` of a 12-col grid, which is roughly 280-300px wide after gaps.
+    // w-80 (320px) overflowed the cell. w-full fills the column correctly at every
+    // breakpoint without fighting the grid's own sizing.
+    <aside className="w-full h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pl-2">
       
       {/* TRENDING TECHNOLOGIES */}
       <div className="flex-shrink-0 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl">
