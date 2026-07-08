@@ -60,7 +60,8 @@ const Connections = () => {
             {connections.map((user) => (
               <div
                 key={user._id}
-                className="group rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 flex items-center justify-between gap-3 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/30 hover:bg-white/[0.05] hover:-translate-y-0.5 hover:shadow-indigo-500/10"
+                onClick={() => navigate(`/profile/${user._id}`)}
+                className="group cursor-pointer rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-5 flex items-center justify-between gap-3 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/30 hover:bg-white/[0.05] hover:-translate-y-0.5 hover:shadow-indigo-500/10"
               >
                 {/* User Info Block */}
                 <div className="flex gap-4 items-center min-w-0">
@@ -85,7 +86,10 @@ const Connections = () => {
                 <button
                   type="button"
                   className="shrink-0 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/35"
-                  onClick={() => navigate(`/message/${user._id}`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/message/${user._id}`);
+                  }}
                 >
                   <BsChatDotsFill size={13} />
                   Chat

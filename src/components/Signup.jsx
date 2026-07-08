@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import Chat from "../assets/Chat.gif";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import axios from "react-redux";
+import { useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaCode, FaTerminal } from "react-icons/fa6";
 import { signupValidation } from "../utils/validation";
+import axiosInstance from "axios";
 
 const Signup = () => {
   const [user, setUser] = useState({
@@ -17,6 +19,13 @@ const Signup = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const authenticatedUser = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      navigate("/feed", { replace: true });
+    }
+  }, [authenticatedUser, navigate]);
 
   const handleInputData = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -29,7 +38,7 @@ const Signup = () => {
     if (!isValid) return;
 
     try {
-      await axios.post(
+      await axiosInstance.post(
         `${BASE_URL}/signup`,
         user,
         { withCredentials: true }

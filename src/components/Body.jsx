@@ -1,48 +1,26 @@
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import axios from "axios";
-
+import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
-import Footer from "./Footer";
-import { addUser } from "../utils/userSlice";
-import { BASE_URL } from "../utils/constants";
+import { useSelector } from "react-redux";
 
 const Body = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const fetchUser = async () => {
-    const publicRoutes = ["/", "/login", "/signup"];
-
-    // 🚫 Do NOT call auth API on public pages
-    if (publicRoutes.includes(location.pathname)) return;
-
-    try {
-      const res = await axios.get(`${BASE_URL}/profile/view`, {
-        withCredentials: true,
-      });
-
-      dispatch(addUser(res.data.data));
-    } catch (err) {
-      navigate("/login");
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, [location.pathname]);
+  const user = useSelector((state) => state.user);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0E14] text-gray-100">
+    <div className="flex flex-col min-h-screen bg-[#0B0E14]">
       <Navbar />
-
-      <div className="flex-1">
-        <Outlet />
-      </div>
-
-      <Footer />
+      {user ? (
+        <div className="flex flex-1 relative overflow-hidden">
+          {/* Dynamic Authenticated Shared Shell Layout */}
+          <main className="flex-1 overflow-y-auto">
+            <Outlet />
+          </main>
+        </div>
+      ) : (
+        <div className="flex flex-col flex-grow w-full">
+          {/* Flat Non-Authenticated Pure Layout Frame Container */}
+          <Outlet />
+        </div>
+      )}
     </div>
   );
 };

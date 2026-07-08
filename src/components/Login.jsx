@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { FiMail, FiLock, FiAlertCircle, FiArrowRight } from "react-icons/fi";
 import { addUser } from "../utils/userSlice";
 import { BASE_URL } from "../utils/constants";
@@ -19,6 +19,13 @@ const Login = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const authenticatedUser = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      navigate("/feed", { replace: true });
+    }
+  }, [authenticatedUser, navigate]);
 
   const handleInputData = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -54,7 +61,7 @@ const Login = () => {
       const userData = await fetchUserData();
       dispatch(addUser(userData));
 
-      navigate("/feed");
+      navigate("/feed", { replace: true });
     } catch (error) {
       setError(error?.response?.data?.message || "Login failed");
     }

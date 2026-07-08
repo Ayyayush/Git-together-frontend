@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { FiCheck, FiX } from "react-icons/fi";
 import { setReceivedRequests, removeReceivedRequest } from "../utils/requestSlice";
 import { BASE_URL } from "../utils/constants";
@@ -9,6 +10,7 @@ import noRequestsImg from "../assets/requests.png";
 
 const Requests = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const receivedRequests = useSelector((state) => state.requests.received);
   
   // Track specific request IDs currently sending an API update to prevent spam
@@ -100,7 +102,8 @@ const Requests = () => {
               return (
                 <div
                   key={req._id}
-                  className={`group rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/30 hover:bg-white/[0.05] ${
+                  onClick={() => req.fromUserId?._id && navigate(`/profile/${req.fromUserId._id}`)}
+                  className={`group cursor-pointer rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-lg shadow-black/30 transition-all duration-300 hover:border-indigo-400/30 hover:bg-white/[0.05] ${
                     isItemProcessing ? "opacity-60 pointer-events-none" : ""
                   }`}
                 >
@@ -127,7 +130,10 @@ const Requests = () => {
                       type="button"
                       disabled={!!processingId}
                       className="flex items-center gap-1.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-1.5 text-sm font-medium hover:bg-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleRequest(req._id, "rejected")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRequest(req._id, "rejected");
+                      }}
                     >
                       <FiX size={14} />
                       Reject
@@ -137,7 +143,10 @@ const Requests = () => {
                       type="button"
                       disabled={!!processingId}
                       className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-1.5 text-sm font-medium shadow-md shadow-indigo-500/25 hover:scale-105 hover:shadow-cyan-500/35 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleRequest(req._id, "accepted")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRequest(req._id, "accepted");
+                      }}
                     >
                       <FiCheck size={14} />
                       Accept

@@ -1,26 +1,34 @@
+// Feed.jsx
 import { useEffect, useCallback, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import PremiumModal from "./PremiumModal";
-import { addFeed } from "../utils/feedSlice";
-import FeedCard from "./FeedCard";
+import { addFeed, updateFeed } from "../utils/feedSlice";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import no_feed from "../assets/no_feed.jpeg";
 import feedBg from "../assets/feed.png";
-import { BASE_URL } from "../utils/constants";
+import { BASE_URL, RECOMMENDATION_API } from "../utils/constants";
 import ShimmerCard from "./Shimmer";
+import DeveloperCarousel from "./DeveloperCarousel";
 
-import { FaBars, FaRobot, FaHome, FaUsers, FaEnvelope, FaUser } from "react-icons/fa";
+import { FaBars, FaRobot, FaHome, FaUsers, FaEnvelope, FaUser, FaSlidersH } from "react-icons/fa";
 
 const Feed = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const feed = useSelector((state) => state.feed.list);
+  const feedList = useSelector((state) => state.feed.list);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  
+  // Pipeline Operational States
+  const [loading, setLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  
+  // "recommendation" = Personalized Machine Matches | "explore" = Complete Platform Global Feed
+  const [activeTab, setActiveTab] = useState("recommendation");
 
   // Mobile/Tablet Slide-over Drawer States
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
@@ -28,22 +36,71 @@ const Feed = () => {
 
   const currentPath = location.pathname;
 
-  const fetchFeed = useCallback(async () => {
+  // Single Core Synchronized Initialization Engine Data Flow 
+  const initializePlatformFeed = useCallback(async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/feed`, {
+      setLoading(true);
+      
+      // Phase 1: Always load Recommendations first to check targeted engagement
+      const recRes = await axios.get(`${BASE_URL}${RECOMMENDATION_API}`, {
         withCredentials: true,
       });
-      dispatch(addFeed(res.data.data));
+
+      // Phase 2: Always fetch Global Feed in parallel/sequence so switching tabs is instantaneous and data is ready
+      const feedRes = await axios.get(`${BASE_URL}/feed`, {
+        withCredentials: true,
+      });
+
+      const recData = recRes.data?.data || [];
+      const globalData = feedRes.data?.data || [];
+
+      setRecommendations(recData);
+      dispatch(addFeed(globalData));
+
+      // Automatic Routing Flow Policy Rule: Fallback right to global if machine insights have empty states
+      if (recData.length === 0) {
+        setActiveTab("explore");
+      } else {
+        setActiveTab("recommendation");
+      }
+      
+      setLoading(false);
     } catch (err) {
-      const message = err?.response?.data?.message || "Failed to load your developer feed.";
-      toast.error(message);
+      console.error(err);
+      // Failover Safe Recovery Mode: Attempt fallback straight to core feed on any matching engine crash
+      try {
+        const feedRes = await axios.get(`${BASE_URL}/feed`, {
+          withCredentials: true,
+        });
+        dispatch(addFeed(feedRes.data?.data || []));
+        setRecommendations([]);
+        setActiveTab("explore");
+      } catch (fallbackErr) {
+        toast.error("Failed to sync platform developer feed stream.");
+      } finally {
+        setLoading(false);
+      }
     }
   }, [dispatch]);
 
   useEffect(() => {
-    if (feed?.length) return;
-    fetchFeed();
-  }, [fetchFeed, feed?.length]);
+    initializePlatformFeed();
+  }, [initializePlatformFeed]);
+
+  // Handle local dynamic list updates without triggering complete page re-fetches
+  const handleRecommendationAction = useCallback((userId) => {
+    setRecommendations((prev) => {
+      const remaining = prev.filter((item) => item._id !== userId);
+      if (remaining.length === 0) {
+        setActiveTab("explore");
+      }
+      return remaining;
+    });
+  }, []);
+
+  const handleGlobalAction = useCallback((userId) => {
+    dispatch(updateFeed(userId));
+  }, [dispatch]);
 
   // Close Drawers via Escape Key
   useEffect(() => {
@@ -57,7 +114,7 @@ const Feed = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  if (feed === null) {
+  if (loading) {
     return <ShimmerCard />;
   }
 
@@ -74,16 +131,10 @@ const Feed = () => {
         className="absolute inset-0 bg-cover bg-center scale-105 pointer-events-none z-0"
         style={{ backgroundImage: `url(${feedBg})` }}
       />
-      {/*
-        FIX (issues 2 & 3): last stop was `#0B0E14/95` — 5% transparent, which
-        let a sliver of the photo's real color show through right at the seam
-        with the fully opaque footer below. Making this stop fully opaque
-        matches the page/footer background exactly, so the transition is seamless
-        no matter how tall the feed content is.
-      */}
+      
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B0E14]/90 via-[#0B0E14]/70 to-[#0B0E14] backdrop-blur-[1px] pointer-events-none z-0" />
 
-      {/* MOBILE TRIGGER HEADER - Static rendering to prevent overlapping sticky navbar */}
+      {/* MOBILE TRIGGER HEADER */}
       <div className="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-slate-900/80 backdrop-blur-md border-b border-white/5 relative z-10">
         <button 
           onClick={() => setIsLeftDrawerOpen(true)}
@@ -120,7 +171,7 @@ const Feed = () => {
       {/* RIGHT SIDEBAR DRAWER */}
       <div className={`fixed inset-0 z-50 transition-opacity duration-300 xl:hidden ${isRightDrawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsRightDrawerOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-[85vw] max-w-sm bg-[#0B0E14] border-l border-white/10 p-4 transition-transform duration-300 z-10 flex flex-col ${isRightDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`absolute top-0 right-0 h-full w-[85vw] max-w-sm bg-[#0B0E14] border-l border-white/10 p-4 transition-transform duration-300 z-10 flex flex-col ${isRightDrawerOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex justify-between items-center mb-4 pt-2">
             <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-widest">Discovery Deck</span>
             <button onClick={() => setIsRightDrawerOpen(false)} className="btn btn-xs btn-circle btn-outline text-gray-400">✕</button>
@@ -134,61 +185,105 @@ const Feed = () => {
       {/* MAIN LAYOUT WRAPPER GRID */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-6 items-start">
         
-        {/* LEFT SIDEBAR: Persistent on Desktop (xl) and Tablet (lg) */}
+        {/* LEFT SIDEBAR PERSISTENT PANEL */}
         <div className="hidden lg:block lg:col-span-1 xl:col-span-3">
           <div className="sticky top-20 z-20">
             <LeftSidebar setShowPremiumModal={setShowPremiumModal} />
           </div>
         </div>
 
-        {/* FEED INNER CONTAINER: Centered 50% screen real-estate allocation */}
+        {/* FEED INNER CONTAINER COMPONENT VIEW */}
         <div className="col-span-1 lg:col-span-3 xl:col-span-6">
           <div className="w-full max-w-3xl mx-auto flex flex-col gap-6">
             
-            {/* Unified Header Panel */}
-            <div className="w-full flex items-center justify-between bg-white/[0.02] border border-white/5 backdrop-blur-md p-4 rounded-xl shadow-lg">
+            {/* Unified Custom Navigation Control Strip Toggle */}
+            <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 backdrop-blur-md p-4 rounded-xl shadow-lg">
               <div className="flex flex-col">
-                <h1 className="text-sm font-black text-gray-200 tracking-wide font-mono uppercase">Developer Feed</h1>
-                <p className="text-[11px] text-gray-400">Discover and match with engineering profiles</p>
+                <h1 className="text-sm font-black text-gray-200 tracking-wide font-mono uppercase">Discovery Engine</h1>
+                <p className="text-[11px] text-gray-400">Toggle views to swipe and scan network developers</p>
               </div>
-              <button
-                onClick={() => setShowPremiumModal(true)}
-                className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-[10px] shadow-lg hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest"
-              >
-                👑 Premium Tier
-              </button>
+              
+              {/* Premium-styled Navigation Toggle Controls */}
+              <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/5 self-start sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("recommendation")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold tracking-tight transition-all flex items-center gap-1.5 ${activeTab === "recommendation" ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/20" : "text-gray-400 hover:text-gray-200"}`}
+                >
+                  ✨ Recommended {recommendations.length > 0 && `(${recommendations.length})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("explore")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold tracking-tight transition-all flex items-center gap-1.5 ${activeTab === "explore" ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/20" : "text-gray-400 hover:text-gray-200"}`}
+                >
+                  <FaSlidersH size={10} /> Global Feed {feedList?.length > 0 && `(${feedList.length})`}
+                </button>
+              </div>
             </div>
 
-            {/* Dynamic Rendering List Flow */}
-            {Array.isArray(feed) && feed.length > 0 ? (
-              <div className="w-full flex flex-col gap-6">
-                {feed.map((user) => (
-                  // FIX (issue 1): added `flex justify-center` so FeedCard's fixed
-                  // 360px width is actually centered instead of defaulting left.
-                  <div key={user._id} className="animate-fadeIn w-full flex justify-center">
-                    <FeedCard info={user} />
+            {/* DYNAMIC SWIPE CAROUSEL CONTAINER RENDERING CONDITIONAL FLOW */}
+            {activeTab === "recommendation" ? (
+              recommendations.length > 0 ? (
+                <div className="w-full flex flex-col gap-6">
+                  {/* Subtitle Tracking Header Panel */}
+                  <div className="w-full flex flex-col bg-gradient-to-r from-indigo-950/40 to-cyan-950/40 border border-indigo-500/20 backdrop-blur-md p-4 rounded-xl shadow-lg">
+                    <h2 className="text-base font-black text-indigo-400 tracking-wide font-mono uppercase">
+                      People You May Know
+                    </h2>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      Developers recommended based on your profile.
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div role="status" className="flex flex-col items-center justify-center text-center animate-fadeIn max-w-md mx-auto mt-12">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-400/20 blur-xl" />
-                  <img src={no_feed} alt="No developers available" className="relative w-64 h-48 object-cover rounded-2xl ring-1 ring-white/10 shadow-2xl" />
+
+                  <DeveloperCarousel 
+                    developers={recommendations}
+                    isRecommendation={true}
+                    onActionSuccess={handleRecommendationAction}
+                  />
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl px-6 py-5 shadow-2xl">
-                  <h2 className="text-xl font-bold text-gray-100 tracking-tight">No New Profiles Available</h2>
-                  <p className="mt-2 text-xs text-gray-400 leading-relaxed">You have reviewed all active developer profiles based on your current network reach.</p>
-                  <button type="button" onClick={fetchFeed} className="mt-4 px-4 py-2 text-xs font-mono font-bold text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/10 transition-all">
-                    Refresh Profiles
+              ) : (
+                // Fallback Layout Panel to present explore stream directly when recommended segment clears
+                <div className="w-full py-8 text-center border border-white/5 bg-white/[0.01] rounded-2xl">
+                  <p className="text-xs text-gray-400 font-mono">No new matching recommendations found.</p>
+                  <button 
+                    onClick={() => setActiveTab("explore")}
+                    className="mt-3 px-4 py-1.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-mono font-bold hover:bg-cyan-500/20 transition-all"
+                  >
+                    View Global Explorer Feed
                   </button>
                 </div>
-              </div>
+              )
+            ) : (
+              /* GLOBAL FEED ROUTE PANEL */
+              Array.isArray(feedList) && feedList.length > 0 ? (
+                <DeveloperCarousel 
+                  developers={feedList}
+                  isRecommendation={false}
+                  onActionSuccess={handleGlobalAction}
+                />
+              ) : (
+                /* ABSOLUTE EMPTY STATE: BOTH PIPELINES RETURNED ZERO DATA NODES */
+                <div role="status" className="flex flex-col items-center justify-center text-center animate-fadeIn max-w-md mx-auto mt-12">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-cyan-400/20 blur-xl" />
+                    <img src={no_feed} alt="No developers available" className="relative w-64 h-48 object-cover rounded-2xl ring-1 ring-white/10 shadow-2xl" />
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl px-6 py-5 shadow-2xl">
+                    <h2 className="text-xl font-bold text-gray-100 tracking-tight">No developers available.</h2>
+                    <p className="mt-2 text-xs text-gray-400 leading-relaxed">You have reviewed all active developer profiles based on your current network reach.</p>
+                    <p className="text-xs text-gray-400 font-mono mt-2">No more developers to discover.</p>
+                    <button type="button" onClick={initializePlatformFeed} className="mt-4 px-4 py-2 text-xs font-mono font-bold text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-500/10 transition-all">
+                      Refresh Profiles
+                    </button>
+                  </div>
+                </div>
+              )
             )}
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR: Persistent only on Desktop (xl) layout bounds */}
+        {/* RIGHT SIDEBAR PERSISTENT PANEL */}
         <div className="hidden xl:block xl:col-span-3">
           <div className="sticky top-20 z-20">
             <RightSidebar setShowPremiumModal={setShowPremiumModal} />

@@ -6,6 +6,7 @@ import connectionReducer from "./connectionSlice";
 import requestReducer from "./requestSlice";
 import sidebarReducer from "./sidebarSlice";
 import themeReducer from "./themeSlice";
+import notificationReducer from "./notificationSlice";
 
 const appStore = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ const appStore = configureStore({
     requests: requestReducer,
     sideBar: sidebarReducer,
     theme: themeReducer,
+    notifications: notificationReducer,
   },
 });
 

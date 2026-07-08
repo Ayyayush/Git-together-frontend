@@ -1,74 +1,141 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { FiSend } from "react-icons/fi";
+import { FaSearch, FaChevronLeft } from "react-icons/fa";
 
 import { BASE_URL } from "../utils/constants";
 import { createSocketConnection } from "../utils/socket";
 
+import ConversationList from "./ConversationList";
+import ChatHeader from "./ChatHeader";
+import ChatBubble from "./ChatBubble";
+import TypingIndicator from "./TypingIndicator";
+import MessageInput from "./MessageInput";
+
 const Message = () => {
   const { targetUserId } = useParams();
-
+  const navigate = useNavigate();
   const user = useSelector((store) => store.user);
 
+  const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [targetUser, setTargetUser] = useState(null);
-  const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [searchTerms, setSearchTerms] = useState("");
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [isTargetTyping, setIsTargetTyping] = useState(false);
 
   const socketRef = useRef(null);
   const bottomRef = useRef(null);
-  const inputRef = useRef(null);
+
+  const fetchConversations = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/chats/conversations`, {
+        withCredentials: true,
+      });
+      setConversations(res.data.data || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to load conversations");
+    } finally {
+      setLoadingConversations(false);
+    }
+  };
 
   const fetchChat = async () => {
+    if (!targetUserId) return;
     try {
-      setLoading(true);
-
-      const res = await axios.get(
-        `${BASE_URL}/chat/${targetUserId}`,
-        {
-          withCredentials: true,
-        }
-      );
-
+      setLoadingChat(true);
+      const res = await axios.get(`${BASE_URL}/chat/${targetUserId}`, {
+        withCredentials: true,
+      });
       setTargetUser(res.data.data.targetUser);
       setMessages(res.data.data.chat.messages);
-
     } catch (err) {
-      console.log(err);
-      toast.error("Unable to load chat");
+      console.error(err);
+      toast.error("Unable to load chat messages");
     } finally {
-      setLoading(false);
+      setLoadingChat(false);
     }
   };
 
   useEffect(() => {
-    fetchChat();
+    fetchConversations();
   }, [targetUserId]);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (targetUserId) {
+      fetchChat();
+    } else {
+      setTargetUser(null);
+      setMessages([]);
+    }
+    setIsTargetTyping(false);
+  }, [targetUserId]);
 
   useEffect(() => {
     if (!user) return;
 
     socketRef.current = createSocketConnection();
 
-    socketRef.current.emit("joinChat", {
-      firstName: user.firstName,
-      userId: user._id,
-      targetUserId,
-    });
+    socketRef.current.emit("userConnected", { userId: user._id });
+
+    if (targetUserId) {
+      socketRef.current.emit("joinChat", {
+        userId: user._id,
+        targetUserId,
+      });
+    }
 
     socketRef.current.on("messageReceived", (message) => {
       setMessages((prev) => [...prev, message]);
+      if (socketRef.current) {
+        socketRef.current.emit("markAsSeen", { userId: user._id, targetUserId });
+      }
+      fetchConversations();
+    });
+
+    socketRef.current.on("conversationUpdated", () => {
+      fetchConversations();
+    });
+
+    socketRef.current.on("userTyping", ({ userId, isTyping }) => {
+      if (userId === targetUserId) {
+        setIsTargetTyping(isTyping);
+      }
+    });
+
+    socketRef.current.on("messagesSeen", ({ seenBy }) => {
+      if (seenBy === targetUserId) {
+        setMessages((prev) =>
+          prev.map((m) => (m.senderId._id === user._id ? { ...m, status: "seen", seen: true } : m))
+        );
+      }
+    });
+
+    socketRef.current.on("userStatusChanged", ({ userId, isOnline, lastSeen }) => {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.targetUser?._id === userId
+            ? { ...c, targetUser: { ...c.targetUser, isOnline, lastSeen } }
+            : c
+        )
+      );
+      setTargetUser((prev) =>
+        prev?._id === userId ? { ...prev, isOnline, lastSeen } : prev
+      );
     });
 
     return () => {
-      socketRef.current.off("messageReceived");
+      if (socketRef.current) {
+        socketRef.current.off("messageReceived");
+        socketRef.current.off("conversationUpdated");
+        socketRef.current.off("userTyping");
+        socketRef.current.off("messagesSeen");
+        socketRef.current.off("userStatusChanged");
+      }
     };
   }, [user, targetUserId]);
 
@@ -76,13 +143,9 @@ const Message = () => {
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, isTargetTyping]);
 
-  const sendMessage = () => {
-    const text = newMessage.trim();
-
-    if (!text) return;
-
+  const handleSendMessage = (text) => {
     if (!socketRef.current?.connected) {
       toast.error("Socket not connected");
       return;
@@ -94,12 +157,23 @@ const Message = () => {
       targetUserId,
       text,
     });
-
-    setNewMessage("");
-    inputRef.current?.focus();
   };
 
-  if (loading) {
+  const handleTypingStatus = (isTyping) => {
+    if (socketRef.current && targetUserId) {
+      socketRef.current.emit("typing", {
+        userId: user._id,
+        targetUserId,
+        isTyping,
+      });
+    }
+  };
+
+  const handleConversationSelect = (id) => {
+    navigate(`/chat/${id}`);
+  };
+
+  if (loadingConversations) {
     return (
       <div className="flex justify-center items-center h-[85vh] bg-[#0B0E14]">
         <span className="h-8 w-8 rounded-full border-2 border-white/10 border-t-indigo-400 animate-spin"></span>
@@ -108,152 +182,95 @@ const Message = () => {
   }
 
   return (
-    <div className="flex flex-col h-[85vh] bg-[#0B0E14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/40">
-
-      {/* Header */}
-
-      <div className="border-b border-white/10 bg-white/[0.03] backdrop-blur-xl px-4 md:px-6 py-4 flex items-center gap-4 shrink-0">
-
-        <div className="relative shrink-0">
-          <img
-            src={targetUser?.photoUrl}
-            alt={targetUser?.firstName}
-            className="w-11 h-11 rounded-full object-cover ring-2 ring-white/10"
-          />
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#0B0E14]" />
+    <div className="flex h-[85vh] bg-[#0B0E14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/40">
+      
+      {/* LEFT SIDEBAR PANEL */}
+      <div className={`w-full md:w-80 lg:w-96 border-r border-white/10 flex flex-col shrink-0 bg-white/[0.01] ${
+        targetUserId ? "hidden md:flex" : "flex"
+      }`}>
+        <div className="p-4 border-b border-white/10 bg-white/[0.02]">
+          <h1 className="text-lg font-bold text-gray-100 mb-3">Chats</h1>
+          <div className="relative">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={13} />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchTerms}
+              onChange={(e) => setSearchTerms(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-white/[0.05] border border-white/10 text-xs text-white placeholder-gray-500 outline-none focus:border-indigo-500/50 transition-all"
+            />
+          </div>
         </div>
 
-        <div className="min-w-0">
-
-          <h2 className="text-base font-semibold text-gray-100 truncate">
-
-            {targetUser?.firstName} {targetUser?.lastName}
-
-          </h2>
-
-          <p className="text-xs text-emerald-400">
-
-            Active now
-
-          </p>
-
-        </div>
-
+        <ConversationList
+          conversations={conversations}
+          activeTargetId={targetUserId}
+          onSelect={handleConversationSelect}
+          searchTerms={searchTerms}
+        />
       </div>
 
-      {/* Messages */}
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
-
-        {messages.length === 0 && (
-
-          <div className="flex items-center justify-center h-full">
-
-            <p className="text-gray-500 text-center text-sm">
-
-              Start your conversation with{" "}
-              <span className="font-semibold text-gray-300">
-                {targetUser?.firstName}
-              </span>{" "}
-              👋
-
-            </p>
-
-          </div>
-
-        )}
-
-        {messages.map((message) => {
-
-          const isMine =
-            String(message.senderId._id) ===
-            String(user._id);
-
-          return (
-
-            <div
-              key={message._id}
-              className={`flex ${
-                isMine
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
-
-              <div
-                className={`max-w-[75%] md:max-w-[60%] px-4 py-2.5 rounded-2xl break-words shadow-md ${
-                  isMine
-                    ? "bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-br-md shadow-indigo-500/20"
-                    : "bg-white/[0.06] border border-white/10 text-gray-100 rounded-bl-md"
-                }`}
+      {/* RIGHT CHAT CONTENT CONTAINER */}
+      <div className={`flex-1 flex flex-col min-w-0 bg-[#0B0E14] ${
+        !targetUserId ? "hidden md:flex items-center justify-center bg-white/[0.01]" : "flex"
+      }`}>
+        {targetUserId ? (
+          <>
+            <div className="md:hidden flex items-center px-2 py-1.5 border-b border-white/10 bg-white/[0.02]">
+              <button
+                onClick={() => navigate("/chat")}
+                className="p-2 text-gray-400 hover:text-white flex items-center gap-1 text-sm font-medium"
               >
-
-                {!isMine && (
-
-                  <p className="text-xs font-semibold mb-1 text-cyan-300">
-
-                    {message.senderId.firstName}
-
-                  </p>
-
-                )}
-
-                <p className="text-sm leading-relaxed">{message.text}</p>
-
-                <p className={`text-[10px] mt-1.5 text-right ${isMine ? "text-white/70" : "text-gray-500"}`}>
-
-                  {new Date(message.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-
-                </p>
-
-              </div>
-
+                <FaChevronLeft size={14} /> Back
+              </button>
             </div>
 
-          );
+            <ChatHeader targetUser={targetUser} typingStatus={isTargetTyping} />
 
-        })}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              {loadingChat ? (
+                <div className="flex items-center justify-center h-full">
+                  <span className="h-6 w-6 rounded-full border-2 border-white/10 border-t-indigo-400 animate-spin"></span>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message) => {
+                    const isMine = String(message.senderId._id || message.senderId) === String(user._id);
+                    return (
+                      <ChatBubble
+                        key={message._id}
+                        message={message}
+                        isMine={isMine}
+                      />
+                    );
+                  })}
+                  {isTargetTyping && <TypingIndicator targetUser={targetUser} />}
+                  <div ref={bottomRef}></div>
+                </>
+              )}
+            </div>
 
-        <div ref={bottomRef}></div>
-
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              onTyping={handleTypingStatus}
+              placeholder={`Message ${targetUser?.firstName || ""}...`}
+            />
+          </>
+        ) : (
+          <div className="text-center p-6">
+            <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto mb-4 text-gray-400">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h3 className="text-base font-semibold text-gray-200 mb-1">Your Messages</h3>
+            <p className="text-xs text-gray-500 max-w-xs mx-auto">
+              Select an existing connection from the side panel to start talking or search for developers.
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* Input */}
-
-      <div className="border-t border-white/10 bg-white/[0.02] p-3 md:p-4 flex gap-3 shrink-0">
-
-        <input
-          ref={inputRef}
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => {
-
-            if (e.key === "Enter" && !e.shiftKey) {
-
-              e.preventDefault();
-              sendMessage();
-
-            }
-
-          }}
-          placeholder={`Message ${targetUser?.firstName}...`}
-          className="flex-1 rounded-full bg-white/[0.05] border border-white/10 px-5 py-2.5 text-sm text-gray-100 placeholder:text-gray-600 outline-none transition-all focus:border-indigo-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-indigo-500/20"
-        />
-
-        <button
-          onClick={sendMessage}
-          disabled={!newMessage.trim()}
-          className="flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 shrink-0"
-        >
-          <FiSend size={16} />
-        </button>
-
-      </div>
-
+      
     </div>
   );
 };

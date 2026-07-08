@@ -8,6 +8,7 @@ export const createSocketConnection = () => {
         socket = io(BASE_URL, {
             withCredentials: true,
             transports: ["websocket"], // avoids polling issues
+            autoConnect: true
         })
     }
     return socket
