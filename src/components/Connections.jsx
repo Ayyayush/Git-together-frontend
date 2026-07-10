@@ -88,7 +88,7 @@ const Connections = () => {
                   className="shrink-0 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/35"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/message/${user._id}`);
+                    navigate(`/chat/${user._id}`);
                   }}
                 >
                   <BsChatDotsFill size={13} />

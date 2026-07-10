@@ -1,14 +1,33 @@
-import React from "react";
+// components/RightSidebar.jsx
+
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFire, FaUserPlus, FaRobot, FaCrown, FaCalendarAlt, FaQuoteLeft } from "react-icons/fa";
+import axios from 'axios';
+import { BASE_URL } from '../utils/constants';
+import AiCoachModal from './AiCoachModal';
 
-const RightSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
+const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, userProfileData }) => {
   const navigate = useNavigate();
+  const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
 
   const handleOptimizeProfile = () => {
-    // TODO: Replace external AI link with internal AI Profile Coach view/workflow container.
-    window.open("https://gemini.google.com/", "_blank");
     if (typeof onCloseDrawer === "function") onCloseDrawer();
+    setIsCoachModalOpen(true);
+  };
+
+  const handleTriggerProfileAudit = async () => {
+    try {
+      const res = await axios.post(
+        BASE_URL + "/profile/coach",
+        {},
+        { withCredentials: true }
+      );
+      return res.data;
+    } catch (error) {
+      console.error(error);
+      return { success: false, message: "Unable to generate suggestions right now." };
+    }
   };
 
   const handlePremiumUpgrade = () => {
@@ -21,10 +40,6 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
   };
 
   return (
-    // FIX: was `w-80 max-w-full` (fixed 320px). On the xl grid this sits in
-    // `xl:col-span-3` of a 12-col grid, which is roughly 280-300px wide after gaps.
-    // w-80 (320px) overflowed the cell. w-full fills the column correctly at every
-    // breakpoint without fighting the grid's own sizing.
     <aside className="w-full h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pl-2">
       
       {/* TRENDING TECHNOLOGIES */}
@@ -162,6 +177,13 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
           "Code. Learn. Build. Repeat."
         </p>
       </div>
+
+      <AiCoachModal 
+        isOpen={isCoachModalOpen} 
+        onClose={() => setIsCoachModalOpen(false)} 
+        onAction={handleTriggerProfileAudit}
+        dataProfile={userProfileData}
+      />
     </aside>
   );
 };

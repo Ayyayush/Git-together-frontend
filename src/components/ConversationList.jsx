@@ -1,15 +1,19 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { formatTimeOrDate } from "../utils/dateFormatter";
 import { FaCheck, FaCheckDouble } from "react-icons/fa";
 
 const ConversationList = ({ conversations, activeTargetId, onSelect, searchTerms }) => {
-  const filtered = conversations.filter((c) => {
-    const query = searchTerms.toLowerCase();
-    const first = (c.targetUser?.firstName || "").toLowerCase();
-    const last = (c.targetUser?.lastName || "").toLowerCase();
-    const email = (c.targetUser?.emailId || "").toLowerCase();
-    return first.includes(query) || last.includes(query) || email.includes(query);
-  });
+  const filtered = useMemo(() => {
+    const query = (searchTerms || "").trim().toLowerCase();
+    if (!query) return conversations;
+
+    return conversations.filter((c) => {
+      const first = (c.targetUser?.firstName || "").toLowerCase();
+      const last = (c.targetUser?.lastName || "").toLowerCase();
+      const username = (c.targetUser?.username || "").toLowerCase();
+      return first.includes(query) || last.includes(query) || username.includes(query);
+    });
+  }, [conversations, searchTerms]);
 
   const renderStatusIcon = (status) => {
     if (status === "sent") return <FaCheck className="text-gray-500 text-xs" />;
@@ -21,8 +25,16 @@ const ConversationList = ({ conversations, activeTargetId, onSelect, searchTerms
   return (
     <div className="flex-1 overflow-y-auto divide-y divide-white/5">
       {filtered.length === 0 ? (
-        <div className="p-6 text-center text-sm text-gray-500">
-          No conversations found
+        <div className="p-8 flex flex-col items-center justify-center text-center h-full my-auto">
+          <div className="w-12 h-12 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mb-3 text-gray-600">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-400">No conversations found</p>
+          <p className="text-xs text-gray-600 mt-1 max-w-[200px]">
+            Try looking for a different name or username.
+          </p>
         </div>
       ) : (
         filtered.map((convo) => {

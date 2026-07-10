@@ -1,5 +1,7 @@
+// src/components/Body.jsx
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 import { useSelector } from "react-redux";
 
 const Body = () => {
@@ -19,6 +21,7 @@ const Body = () => {
         <div className="flex flex-col flex-grow w-full">
           {/* Flat Non-Authenticated Pure Layout Frame Container */}
           <Outlet />
+          <Footer />
         </div>
       )}
     </div>

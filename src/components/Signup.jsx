@@ -1,12 +1,22 @@
+// src/components/Signup.jsx
 import { Link, useNavigate } from "react-router-dom";
 import Chat from "../assets/Chat.gif";
-import { useState, useEffect } from "react";
-import axios from "react-redux";
+import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
-import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaCode, FaTerminal } from "react-icons/fa6";
-import { signupValidation } from "../utils/validation";
-import axiosInstance from "axios";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaTerminal,
+  FaAt,
+  FaCircleCheck,
+  FaCircleXmark,
+} from "react-icons/fa6";
+import { FiLoader, FiArrowRight } from "react-icons/fi";
+import axios from "axios";
 
 const Signup = () => {
   const [user, setUser] = useState({
@@ -14,163 +24,289 @@ const Signup = () => {
     lastName: "",
     emailId: "",
     password: "",
+    username: "",
   });
 
   const [error, setError] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState({ checking: false, valid: null, message: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const authenticatedUser = useSelector((state) => state.user);
 
+  const isMounted = useRef(true);
   useEffect(() => {
-    if (authenticatedUser) {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (authenticatedUser && authenticatedUser.username) {
       navigate("/feed", { replace: true });
     }
   }, [authenticatedUser, navigate]);
 
+  useEffect(() => {
+    if (!user.username) {
+      setUsernameStatus({ checking: false, valid: null, message: "" });
+      return;
+    }
+
+    const usernameRegex = /^[a-z0-9_]+$/;
+    if (!usernameRegex.test(user.username)) {
+      setUsernameStatus({ checking: false, valid: false, message: "Lowercase, numbers & underscores only" });
+      return;
+    }
+
+    if (user.username.length < 3) {
+      setUsernameStatus({ checking: false, valid: false, message: "Too short (min 3 chars)" });
+      return;
+    }
+
+    if (user.username.length > 30) {
+      setUsernameStatus({ checking: false, valid: false, message: "Too long (max 30 chars)" });
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      if (!isMounted.current) return;
+      setUsernameStatus({ checking: true, valid: null, message: "" });
+      try {
+        const response = await axios.get(`${BASE_URL}/user/check-username?username=${user.username}`);
+        if (isMounted.current) {
+          if (response.data.available) {
+            setUsernameStatus({ checking: false, valid: true, message: "Username is available" });
+          } else {
+            setUsernameStatus({ checking: false, valid: false, message: "Username taken" });
+          }
+        }
+      } catch (err) {
+        if (isMounted.current) {
+          setUsernameStatus({ checking: false, valid: false, message: "Error verifying availability" });
+        }
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [user.username]);
+
   const handleInputData = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    if (e.target.name === "username") {
+      setUser({ ...user, [e.target.name]: e.target.value.toLowerCase().replace(/\s/g, "") });
+    } else {
+      setUser({ ...user, [e.target.name]: e.target.value });
+    }
   };
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const isValid = signupValidation({ user, setError });
-    if (!isValid) return;
+    if (!user.firstName || !user.lastName || !user.emailId || !user.password || !user.username) {
+      setError("All fields are explicitly required.");
+      return;
+    }
 
+    if (user.firstName.length < 2) {
+      setError("First name must be at least 2 characters long.");
+      return;
+    }
+
+    if (usernameStatus.valid === false) {
+      setError("Please select a valid, available platform identity handle.");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await axiosInstance.post(
+      await axios.post(
         `${BASE_URL}/signup`,
         user,
         { withCredentials: true }
       );
-
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Signup failed");
+      if (isMounted.current) {
+        setError(err.response?.data?.message || "Registration sequence failed");
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
   return (
-    <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center px-4 py-12 sm:px-6 lg:px-16 overflow-hidden bg-[#0D1117] text-gray-200 min-h-[calc(100vh-64px)]">
-      {/* Decorative Premium Background Gradients & Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-indigo-600/10 to-purple-600/0 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-emerald-600/10 to-cyan-600/0 rounded-full blur-[120px] pointer-events-none" />
+    <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0 min-h-[calc(100vh-64px)]">
+      {/* Background Glow Orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-20 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[22rem] h-[22rem] bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[18rem] h-[18rem] bg-violet-500/10 rounded-full blur-3xl" />
+      </div>
 
-      <div className="relative z-10 max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-        
-        {/* Form Container Side */}
-        <div className="w-full lg:w-[52%] max-w-md mx-auto lg:mx-0">
-          <div className="backdrop-blur-xl bg-gray-900/40 border border-gray-800 p-8 rounded-2xl shadow-2xl shadow-black/40 relative group transition-all duration-300 hover:border-gray-700/60">
-            {/* Top Indicator Accent */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_12px_rgba(99,102,241,0.5)]" />
-            
-            {/* Header Content */}
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
-                <FaTerminal className="w-3 h-3" /> Initializing Session
+      <div className="relative z-10 max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16 justify-center">
+        {/* ================= SIGNUP CARD ================= */}
+        <div className="relative z-10 lg:w-1/2 w-full max-w-md">
+          {/* Animated gradient border wrapper */}
+          <div className="relative rounded-[1.75rem] p-[1.5px] overflow-hidden">
+            <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(99,102,241,0.6),rgba(34,211,238,0.6),rgba(139,92,246,0.6),rgba(99,102,241,0.6))] animate-[spin_6s_linear_infinite] opacity-70" />
+
+            <div className="relative flex flex-col justify-center rounded-[1.75rem] border border-white/10 bg-[#0B0E14]/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-8 lg:p-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4 self-start">
+                <FaTerminal size={12} /> Initializing Session
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
                 Join the Network
-              </h1>
-              <p className="text-gray-400 text-sm mt-1.5">
+              </h2>
+              <p className="text-gray-400 mb-8">
                 Create your GitTogether developer profile.
               </p>
-            </div>
 
-            {/* Error Message Box */}
-            {error && (
-              <div className="alert alert-error bg-red-950/40 border border-red-800/60 text-red-300 text-sm py-3 px-4 rounded-xl mb-5 flex items-center gap-2 animate-fade-in">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>{error}</span>
-              </div>
-            )}
+              <form className="space-y-4" onSubmit={handleSubmitForm}>
+                {/* First Name & Last Name Split Field */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <label htmlFor="firstName" className="sr-only">First Name</label>
+                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                    <input
+                      id="firstName"
+                      type="text"
+                      placeholder="First Name"
+                      name="firstName"
+                      value={user.firstName}
+                      onChange={handleInputData}
+                      className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                    />
+                  </div>
+                  <div className="relative">
+                    <label htmlFor="lastName" className="sr-only">Last Name</label>
+                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                    <input
+                      id="lastName"
+                      type="text"
+                      placeholder="Last Name"
+                      name="lastName"
+                      value={user.lastName}
+                      onChange={handleInputData}
+                      className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                    />
+                  </div>
+                </div>
 
-            {/* Registration Form */}
-            <form className="space-y-4" onSubmit={handleSubmitForm}>
-              
-              {/* Names Field Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-control relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                    <FaUser className="w-3.5 h-3.5" />
-                  </span>
+                {/* Username Field */}
+                <div className="relative">
+                  <label htmlFor="username" className="sr-only">Username</label>
+                  <FaAt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
                   <input
+                    id="username"
                     type="text"
-                    placeholder="First Name"
-                    name="firstName"
-                    value={user.firstName}
+                    placeholder="username"
+                    name="username"
+                    value={user.username}
                     onChange={handleInputData}
-                    className="w-full bg-[#090D14] border border-gray-800 text-gray-100 rounded-xl pl-10 pr-4 py-3 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-600 hover:border-gray-700"
+                    className={`peer w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/[0.04] border text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:bg-white/[0.06] focus:ring-2 ${
+                      usernameStatus.valid === true ? "border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/20 focus:shadow-[0_0_20px_rgba(16,185,129,0.15)]" :
+                      usernameStatus.valid === false ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 focus:shadow-[0_0_20px_rgba(239,68,68,0.15)]" :
+                      "border-white/10 focus:border-indigo-400/60 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                    }`}
+                  />
+                  <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                    {usernameStatus.checking && <span className="h-4 w-4 rounded-full border-2 border-t-indigo-400 border-white/10 animate-spin" />}
+                    {usernameStatus.valid === true && <FaCircleCheck className="text-emerald-500 w-4 h-4" />}
+                    {usernameStatus.valid === false && <FaCircleXmark className="text-red-500 w-4 h-4" />}
+                  </span>
+                </div>
+                {usernameStatus.message && (
+                  <p className={`text-xs px-1 font-mono transition-colors duration-200 ${usernameStatus.valid ? "text-emerald-400" : "text-red-400"}`}>
+                    {usernameStatus.valid === true ? "✓ " : usernameStatus.valid === false ? "✗ " : ""}{usernameStatus.message}
+                  </p>
+                )}
+
+                {/* Email Field */}
+                <div className="relative">
+                  <label htmlFor="emailId" className="sr-only">Email</label>
+                  <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                  <input
+                    id="emailId"
+                    type="email"
+                    placeholder="Email Address"
+                    name="emailId"
+                    value={user.emailId}
+                    onChange={handleInputData}
+                    className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
                 </div>
-                <div className="form-control relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                    <FaUser className="w-3.5 h-3.5" />
-                  </span>
+
+                {/* Password Field */}
+                <div className="relative">
+                  <label htmlFor="password" className="sr-only">Password</label>
+                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
                   <input
-                    type="text"
-                    placeholder="Last Name"
-                    name="lastName"
-                    value={user.lastName}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password (Min 8 characters)"
+                    name="password"
+                    value={user.password}
                     onChange={handleInputData}
-                    className="w-full bg-[#090D14] border border-gray-800 text-gray-100 rounded-xl pl-10 pr-4 py-3 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-600 hover:border-gray-700"
+                    className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  </button>
                 </div>
-              </div>
 
-              {/* Email Field */}
-              <div className="form-control relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                  <FaEnvelope className="w-3.5 h-3.5" />
-                </span>
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  name="emailId"
-                  value={user.emailId}
-                  onChange={handleInputData}
-                  className="w-full bg-[#090D14] border border-gray-800 text-gray-100 rounded-xl pl-10 pr-4 py-3 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-600 hover:border-gray-700"
-                />
-              </div>
+                {error && (
+                  <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400 animate-fade-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{error}</span>
+                  </div>
+                )}
 
-              {/* Password Field */}
-              <div className="form-control relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
-                  <FaLock className="w-3.5 h-3.5" />
-                </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password (Min 6 characters)"
-                  name="password"
-                  value={user.password}
-                  onChange={handleInputData}
-                  className="w-full bg-[#090D14] border border-gray-800 text-gray-100 rounded-xl pl-10 pr-11 py-3 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-600 hover:border-gray-700"
-                />
+                {/* Submit Button */}
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-500 hover:text-gray-300 transition-colors focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="group relative w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-cyan-500/40 hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
                 >
-                  {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  {isSubmitting ? (
+                    <>
+                      <FiLoader size={16} className="animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Create Developer Account
+                      <FiArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                    </>
+                  )}
                 </button>
+              </form>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-7">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <span className="text-[11px] uppercase tracking-widest text-gray-600">
+                  Registered handles
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </div>
 
-              {/* Submit CTA Button */}
-              <button
-                type="submit"
-                className="w-full mt-2 btn bg-indigo-600 hover:bg-indigo-500 text-white font-medium border-none rounded-xl py-3 shadow-[0_4px_20px_rgba(79,70,229,0.3)] transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
-              >
-                Create Developer Account
-              </button>
-            </form>
-
-            {/* Form Footer / Redirect Link */}
-            <div className="mt-6 pt-5 border-t border-gray-800 text-center">
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm text-gray-400 text-center">
                 Already have an account?{" "}
-                <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors underline underline-offset-4 decoration-indigo-500/40 hover:decoration-indigo-400">
+                <Link
+                  to="/login"
+                  className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium transition-colors"
+                >
                   Login here
                 </Link>
               </p>
@@ -178,24 +314,14 @@ const Signup = () => {
           </div>
         </div>
 
-        {/* Brand Illustration Side */}
-        <div className="w-full lg:w-[48%] hidden lg:flex flex-col items-center justify-center text-center">
+        {/* ================= GRAPHIC DISPLAY PANEL ================= */}
+        <div className="w-full lg:w-1/2 hidden lg:flex flex-col items-center justify-center text-center">
           <div className="relative group p-6 rounded-2xl bg-gradient-to-b from-gray-900/20 to-transparent border border-gray-800/40 shadow-inner max-w-md">
-            {/* Tiny Floating Badges */}
-            <div className="absolute -top-4 -left-4 animate-bounce duration-1000 bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono shadow-xl shadow-black/50">
-              <FaCode className="text-emerald-400" /> <span>Connect</span>
-            </div>
-            <div className="absolute -bottom-2 -right-4 animate-pulse bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono shadow-xl shadow-black/50">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-              <span>Collab Live</span>
-            </div>
-
             <img
               src={Chat}
               alt="GitTogether Platform Preview"
               className="w-full h-auto max-h-[340px] object-contain rounded-xl opacity-90 transition-all duration-500 group-hover:scale-[1.02] filter drop-shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
             />
-
             <div className="mt-6">
               <h3 className="text-xl font-bold text-gray-200">The Global Developer Coffeehouse</h3>
               <p className="text-gray-400 text-sm mt-2 leading-relaxed">
@@ -204,7 +330,6 @@ const Signup = () => {
             </div>
           </div>
         </div>
-
       </div>
     </main>
   );

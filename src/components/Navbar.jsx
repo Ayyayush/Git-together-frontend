@@ -1,7 +1,7 @@
+// src/components/Navbar.jsx
 import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "../utils/userSlice";
-import { toggleSibeBar } from "../utils/sidebarSlice"; 
 import { toggleTheme } from "../utils/themeSlice";
 import { setSearch } from "../utils/feedSlice";
 import { setNotificationsData, addNotificationItem, markItemAsRead } from "../utils/notificationSlice";
@@ -17,8 +17,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   FaBell,
   FaEnvelope,
-  FaBars,
-  FaTimes,
   FaSun,
   FaMoon,
   FaUser,
@@ -33,7 +31,6 @@ import {
 
 const Navbar = () => {
   const user = useSelector((state) => state.user);
-  const { sidebar } = useSelector((state) => state.sideBar);
   const { theme } = useSelector((state) => state.theme);
   const { notifications, unreadCount } = useSelector((state) => state.notifications || { notifications: [], unreadCount: 0 });
 
@@ -177,23 +174,13 @@ const Navbar = () => {
         text-white`}
       >
         {/* ================= LEFT ================= */}
-        <div className="flex items-center gap-3 shrink-0">
-          {user && (
-            <button
-              type="button"
-              onClick={() => dispatch(toggleSibeBar(!sidebar))}
-              className="btn btn-ghost btn-circle lg:hidden hover:bg-white/10"
-            >
-              {sidebar ? <FaTimes /> : <FaBars />}
-            </button>
-          )}
-
+        <div className="flex items-center shrink-0">
           <div
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group"
             onClick={() => navigate(user ? "/feed" : "/login")}
           >
             <img src={logo} alt="Logo" className="w-9 h-9 transition-transform group-hover:scale-105" />
-            <span className="hidden sm:block text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent">
+            <span className="block text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent">
               GitTogether
             </span>
           </div>
@@ -234,7 +221,7 @@ const Navbar = () => {
             <>
               <button
                 type="button"
-                onClick={() => navigate("/message")}
+                onClick={() => navigate("/chat")}
                 className="btn btn-ghost btn-circle hover:bg-white/10 transition-colors"
               >
                 <FaEnvelope className="text-gray-300" size={15} />

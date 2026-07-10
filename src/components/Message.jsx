@@ -263,10 +263,16 @@ const Message = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-gray-200 mb-1">Your Messages</h3>
-            <p className="text-xs text-gray-500 max-w-xs mx-auto">
-              Select an existing connection from the side panel to start talking or search for developers.
+            <h3 className="text-base font-semibold text-gray-200 mb-1">No conversations yet</h3>
+            <p className="text-xs text-gray-500 max-w-xs mx-auto mb-4">
+              Select an existing connection from the side panel to start talking or browse developers.
             </p>
+            <button
+              onClick={() => navigate("/feed")}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-xs text-white font-semibold shadow-md shadow-indigo-500/25 hover:scale-105 transition-all duration-300"
+            >
+              Browse Developers
+            </button>
           </div>
         )}
       </div>
