@@ -1,5 +1,7 @@
 // utils/constants.js
-export const BASE_URL = "https://git-together-xhn9.onrender.com";
+export const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://git-together-xhn9.onrender.com";
 
 export const DEFAULT_IMG =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
