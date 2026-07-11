@@ -171,27 +171,37 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
       <div className="flex justify-between items-center gap-3 px-6 py-4 bg-black/30">
         <button
           onClick={() => handleSendRequest("ignored")}
-          className="flex flex-1 items-center justify-center gap-2 py-2 rounded-full
-                     bg-red-500/10 text-red-400
-                     border border-red-500/20
-                     hover:bg-red-500 hover:text-white
-                     hover:shadow-lg hover:shadow-red-500/40
-                     transition-all"
+          className="group relative flex flex-1 items-center justify-center gap-2 py-2
+                     rounded-full
+                     bg-red-500/[0.08] text-red-400 font-semibold text-sm tracking-wide
+                     border border-red-500/25
+                     backdrop-blur-sm
+                     shadow-[0_1px_2px_rgba(0,0,0,0.25)]
+                     transition-all duration-200 ease-out
+                     hover:bg-red-500 hover:text-white hover:border-red-500/80
+                     hover:shadow-[0_8px_20px_-6px_rgba(239,68,68,0.55)]
+                     active:scale-[0.97] active:shadow-[0_2px_8px_-3px_rgba(239,68,68,0.45)]
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]"
         >
-          <FaTimes />
-          Ignore
+          <FaTimes className="text-[12px] transition-transform duration-200 group-active:scale-90" />
+          <span>Next Time</span>
         </button>
 
         <button
           onClick={() => handleSendRequest("interested")}
-          className="flex flex-1 items-center justify-center gap-2 py-2 rounded-full
-                     bg-gradient-to-r from-indigo-500 to-cyan-500 text-white
-                     shadow-md shadow-indigo-500/30
-                     hover:scale-[1.03] hover:shadow-lg hover:shadow-cyan-500/40
-                     transition-all"
+          className="group relative flex flex-1 items-center justify-center gap-2 py-2
+                     rounded-full
+                     bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold text-sm tracking-wide
+                     border border-white/10
+                     shadow-[0_4px_14px_-3px_rgba(99,102,241,0.5)]
+                     transition-all duration-200 ease-out
+                     hover:shadow-[0_10px_26px_-5px_rgba(34,211,238,0.6)]
+                     hover:brightness-110
+                     active:scale-[0.97] active:brightness-95
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]"
         >
-          <FaHeart />
-          Interested
+          <FaHeart className="text-[12px] transition-transform duration-200 group-hover:scale-110 group-active:scale-90" />
+          <span>Collaborate</span>
         </button>
       </div>
     </div>

@@ -144,11 +144,20 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
+      // Await the backend clearing the httpOnly cookie first.
       await axios.post(`${BASE_URL}/logout`, {}, { withCredentials: true });
+    } catch (err) {
+      // Even if the network call fails, we still want to clear local auth
+      // state and route the user away from protected content — the app
+      // should never depend on this call succeeding to log the user out
+      // client-side, and any subsequent authenticated request will fail
+      // and be caught by ProtectedRoute anyway.
+      console.error("Logout request failed", err);
+    } finally {
+      // Clearing Redux + navigating away happens unconditionally so the
+      // UI never gets stuck showing protected content after logout.
       dispatch(removeUser());
       navigate("/login", { replace: true });
-    } catch (err) {
-      console.error("Logout failed", err);
     }
   };
 
