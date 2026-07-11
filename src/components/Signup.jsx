@@ -12,8 +12,6 @@ import {
   FaLock,
   FaTerminal,
   FaAt,
-  FaCircleCheck,
-  FaCircleXmark,
 } from "react-icons/fa6";
 import { FiLoader, FiArrowRight } from "react-icons/fi";
 import axios from "axios";
@@ -28,7 +26,6 @@ const Signup = () => {
   });
 
   const [error, setError] = useState("");
-  const [usernameStatus, setUsernameStatus] = useState({ checking: false, valid: null, message: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -47,50 +44,6 @@ const Signup = () => {
       navigate("/feed", { replace: true });
     }
   }, [authenticatedUser, navigate]);
-
-  useEffect(() => {
-    if (!user.username) {
-      setUsernameStatus({ checking: false, valid: null, message: "" });
-      return;
-    }
-
-    const usernameRegex = /^[a-z0-9_]+$/;
-    if (!usernameRegex.test(user.username)) {
-      setUsernameStatus({ checking: false, valid: false, message: "Lowercase, numbers & underscores only" });
-      return;
-    }
-
-    if (user.username.length < 3) {
-      setUsernameStatus({ checking: false, valid: false, message: "Too short (min 3 chars)" });
-      return;
-    }
-
-    if (user.username.length > 30) {
-      setUsernameStatus({ checking: false, valid: false, message: "Too long (max 30 chars)" });
-      return;
-    }
-
-    const delayDebounce = setTimeout(async () => {
-      if (!isMounted.current) return;
-      setUsernameStatus({ checking: true, valid: null, message: "" });
-      try {
-        const response = await axios.get(`${BASE_URL}/user/check-username?username=${user.username}`);
-        if (isMounted.current) {
-          if (response.data.available) {
-            setUsernameStatus({ checking: false, valid: true, message: "Username is available" });
-          } else {
-            setUsernameStatus({ checking: false, valid: false, message: "Username taken" });
-          }
-        }
-      } catch (err) {
-        if (isMounted.current) {
-          setUsernameStatus({ checking: false, valid: false, message: "Error verifying availability" });
-        }
-      }
-    }, 400);
-
-    return () => clearTimeout(delayDebounce);
-  }, [user.username]);
 
   const handleInputData = (e) => {
     if (e.target.name === "username") {
@@ -111,11 +64,6 @@ const Signup = () => {
 
     if (user.firstName.length < 2) {
       setError("First name must be at least 2 characters long.");
-      return;
-    }
-
-    if (usernameStatus.valid === false) {
-      setError("Please select a valid, available platform identity handle.");
       return;
     }
 
@@ -207,23 +155,9 @@ const Signup = () => {
                     name="username"
                     value={user.username}
                     onChange={handleInputData}
-                    className={`peer w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/[0.04] border text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:bg-white/[0.06] focus:ring-2 ${
-                      usernameStatus.valid === true ? "border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500/20 focus:shadow-[0_0_20px_rgba(16,185,129,0.15)]" :
-                      usernameStatus.valid === false ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 focus:shadow-[0_0_20px_rgba(239,68,68,0.15)]" :
-                      "border-white/10 focus:border-indigo-400/60 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                    }`}
+                    className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
-                  <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                    {usernameStatus.checking && <span className="h-4 w-4 rounded-full border-2 border-t-indigo-400 border-white/10 animate-spin" />}
-                    {usernameStatus.valid === true && <FaCircleCheck className="text-emerald-500 w-4 h-4" />}
-                    {usernameStatus.valid === false && <FaCircleXmark className="text-red-500 w-4 h-4" />}
-                  </span>
                 </div>
-                {usernameStatus.message && (
-                  <p className={`text-xs px-1 font-mono transition-colors duration-200 ${usernameStatus.valid ? "text-emerald-400" : "text-red-400"}`}>
-                    {usernameStatus.valid === true ? "✓ " : usernameStatus.valid === false ? "✗ " : ""}{usernameStatus.message}
-                  </p>
-                )}
 
                 {/* Email Field */}
                 <div className="relative">
