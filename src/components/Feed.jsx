@@ -1,11 +1,11 @@
 // Feed.jsx
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import PremiumModal from "./PremiumModal";
-import { addFeed, updateFeed } from "../utils/feedSlice";
+import { addFeed, appendFeed, updateFeed } from "../utils/feedSlice";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import no_feed from "../assets/no_feed.jpeg";
@@ -16,19 +16,28 @@ import DeveloperCarousel from "./DeveloperCarousel";
 
 import { FaBars, FaRobot, FaHome, FaUsers, FaEnvelope, FaUser, FaSlidersH } from "react-icons/fa";
 
+const FEED_PAGE_LIMIT = 10;
+
 const Feed = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const feedList = useSelector((state) => state.feed.list);
+  const feedPage = useSelector((state) => state.feed.page);
+  const feedHasMore = useSelector((state) => state.feed.hasMore);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  
+
   // Pipeline Operational States
   const [loading, setLoading] = useState(true);
   const [recommendations, setRecommendations] = useState([]);
-  
+
   // "recommendation" = Personalized Machine Matches | "explore" = Complete Platform Global Feed
   const [activeTab, setActiveTab] = useState("recommendation");
+
+  // Infinite scroll state (explore/global feed only)
+  const [loadingMore, setLoadingMore] = useState(false);
+  const fetchingRef = useRef(false);
+  const sentinelRef = useRef(null);
 
   // Mobile/Tablet Slide-over Drawer States
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
@@ -36,26 +45,28 @@ const Feed = () => {
 
   const currentPath = location.pathname;
 
-  // Single Core Synchronized Initialization Engine Data Flow 
+  // Single Core Synchronized Initialization Engine Data Flow
   const initializePlatformFeed = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Phase 1: Always load Recommendations first to check targeted engagement
       const recRes = await axios.get(`${BASE_URL}${RECOMMENDATION_API}`, {
         withCredentials: true,
       });
 
-      // Phase 2: Always fetch Global Feed in parallel/sequence so switching tabs is instantaneous and data is ready
+      // Phase 2: Always fetch page 1 of the Global Feed in parallel/sequence so switching tabs is instantaneous and data is ready
       const feedRes = await axios.get(`${BASE_URL}/feed`, {
+        params: { page: 1, limit: FEED_PAGE_LIMIT },
         withCredentials: true,
       });
 
       const recData = recRes.data?.data || [];
       const globalData = feedRes.data?.data || [];
+      const globalHasMore = feedRes.data?.hasMore ?? globalData.length === FEED_PAGE_LIMIT;
 
       setRecommendations(recData);
-      dispatch(addFeed(globalData));
+      dispatch(addFeed({ data: globalData, hasMore: globalHasMore, page: 1 }));
 
       // Automatic Routing Flow Policy Rule: Fallback right to global if machine insights have empty states
       if (recData.length === 0) {
@@ -63,16 +74,19 @@ const Feed = () => {
       } else {
         setActiveTab("recommendation");
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error(err);
       // Failover Safe Recovery Mode: Attempt fallback straight to core feed on any matching engine crash
       try {
         const feedRes = await axios.get(`${BASE_URL}/feed`, {
+          params: { page: 1, limit: FEED_PAGE_LIMIT },
           withCredentials: true,
         });
-        dispatch(addFeed(feedRes.data?.data || []));
+        const globalData = feedRes.data?.data || [];
+        const globalHasMore = feedRes.data?.hasMore ?? globalData.length === FEED_PAGE_LIMIT;
+        dispatch(addFeed({ data: globalData, hasMore: globalHasMore, page: 1 }));
         setRecommendations([]);
         setActiveTab("explore");
       } catch (fallbackErr) {
@@ -86,6 +100,59 @@ const Feed = () => {
   useEffect(() => {
     initializePlatformFeed();
   }, [initializePlatformFeed]);
+
+  // Fetch the next page of the global feed and append it to Redux.
+  const fetchNextFeedPage = useCallback(async () => {
+    if (fetchingRef.current || !feedHasMore) return;
+
+    fetchingRef.current = true;
+    setLoadingMore(true);
+
+    try {
+      const nextPage = (feedPage || 1) + 1;
+      const res = await axios.get(`${BASE_URL}/feed`, {
+        params: { page: nextPage, limit: FEED_PAGE_LIMIT },
+        withCredentials: true,
+      });
+
+      const newData = res.data?.data || [];
+      const hasMore = res.data?.hasMore ?? newData.length === FEED_PAGE_LIMIT;
+
+      // Stop cleanly if the backend has nothing left to give.
+      if (newData.length === 0) {
+        dispatch(appendFeed({ data: [], hasMore: false, page: feedPage }));
+      } else {
+        dispatch(appendFeed({ data: newData, hasMore, page: nextPage }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load more developers.");
+    } finally {
+      setLoadingMore(false);
+      fetchingRef.current = false;
+    }
+  }, [dispatch, feedHasMore, feedPage]);
+
+  // IntersectionObserver on the sentinel below the global feed carousel.
+  useEffect(() => {
+    if (activeTab !== "explore") return undefined;
+
+    const node = sentinelRef.current;
+    if (!node) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && feedHasMore && !fetchingRef.current) {
+          fetchNextFeedPage();
+        }
+      },
+      { root: null, rootMargin: "200px", threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [activeTab, feedHasMore, fetchNextFeedPage]);
 
   // Handle local dynamic list updates without triggering complete page re-fetches
   const handleRecommendationAction = useCallback((userId) => {
@@ -131,7 +198,7 @@ const Feed = () => {
         className="absolute inset-0 bg-cover bg-center scale-105 pointer-events-none z-0"
         style={{ backgroundImage: `url(${feedBg})` }}
       />
-      
+
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B0E14]/90 via-[#0B0E14]/70 to-[#0B0E14] backdrop-blur-[1px] pointer-events-none z-0" />
 
       {/* MOBILE TRIGGER HEADER */}
@@ -257,11 +324,28 @@ const Feed = () => {
             ) : (
               /* GLOBAL FEED ROUTE PANEL */
               Array.isArray(feedList) && feedList.length > 0 ? (
-                <DeveloperCarousel 
-                  developers={feedList}
-                  isRecommendation={false}
-                  onActionSuccess={handleGlobalAction}
-                />
+                <div className="w-full flex flex-col gap-2">
+                  <DeveloperCarousel 
+                    developers={feedList}
+                    isRecommendation={false}
+                    onActionSuccess={handleGlobalAction}
+                  />
+
+                  {/* Infinite scroll sentinel — observed via IntersectionObserver */}
+                  <div ref={sentinelRef} className="w-full flex flex-col items-center py-3 min-h-[24px]">
+                    {loadingMore && (
+                      <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
+                        <span className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                        Loading more developers...
+                      </div>
+                    )}
+                    {!feedHasMore && !loadingMore && (
+                      <p className="text-xs font-mono text-gray-500 tracking-wide">
+                        You've reached the end of the developer feed.
+                      </p>
+                    )}
+                  </div>
+                </div>
               ) : (
                 /* ABSOLUTE EMPTY STATE: BOTH PIPELINES RETURNED ZERO DATA NODES */
                 <div role="status" className="flex flex-col items-center justify-center text-center animate-fadeIn max-w-md mx-auto mt-12">

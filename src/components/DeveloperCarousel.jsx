@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import FeedCard from "./FeedCard";
 
-const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) => {
+const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess, onActionFailure }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -12,9 +12,17 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
 
   const minSwipeDistance = 50;
 
+  // Reset index to 0 ONLY when switching feeds (e.g., Recommended vs Global)
   useEffect(() => {
     setCurrentIndex(0);
-  }, [developers.length, isRecommendation]);
+  }, [isRecommendation]);
+
+  // Handle bounds safety if the developers list array shrinks below current index in background
+  useEffect(() => {
+    if (developers && developers.length > 0 && currentIndex >= developers.length) {
+      setCurrentIndex(developers.length - 1);
+    }
+  }, [developers, currentIndex]);
 
   const triggerTransition = useCallback((nextIndex, direction) => {
     if (animating) return;
@@ -53,11 +61,17 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
     }
   }, [currentIndex, triggerTransition]);
 
+  // Adjust carousel index on immediate item removal to prevent out-of-bounds rendering
   const handleActionSuccess = useCallback((userId) => {
+    if (developers.length > 1 && currentIndex === developers.length - 1) {
+      // If we are removing the last card in the deck, step index down by 1
+      setCurrentIndex((prev) => Math.max(0, prev - 1));
+    }
+
     if (onActionSuccess) {
       onActionSuccess(userId);
     }
-  }, [onActionSuccess]);
+  }, [onActionSuccess, currentIndex, developers.length]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -95,7 +109,11 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
 
   if (!developers || developers.length === 0) return null;
 
-  const currentDev = developers[currentIndex];
+  // Use boundary-safe fallback calculation
+  const safeIndex = currentIndex >= developers.length ? Math.max(0, developers.length - 1) : currentIndex;
+  const currentDev = developers[safeIndex];
+
+  if (!currentDev) return null;
 
   return (
     <div className="w-full flex flex-col items-center relative px-2">
@@ -107,7 +125,7 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
           <button
             type="button"
             onClick={handlePrev}
-            disabled={currentIndex === 0}
+            disabled={safeIndex === 0}
             className="absolute -left-6 sm:-left-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
             aria-label="Previous Developer"
           >
@@ -122,9 +140,11 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
             onTouchEnd={onTouchEnd}
           >
             <FeedCard 
+              key={currentDev._id}
               info={currentDev} 
               isRecommendation={isRecommendation} 
               onActionSuccess={handleActionSuccess} 
+              onActionFailure={onActionFailure}
             />
           </div>
 
@@ -132,7 +152,7 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
           <button
             type="button"
             onClick={handleNext}
-            disabled={currentIndex === developers.length - 1}
+            disabled={safeIndex === developers.length - 1}
             className="absolute -right-6 sm:-right-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
             aria-label="Next Developer"
           >
@@ -149,14 +169,14 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess }) =>
             <span
               key={idx}
               className={`h-2 rounded-full transition-all duration-300 ease-out shrink-0 ${
-                idx === currentIndex ? "w-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]" : "w-2 bg-gray-600"
+                idx === safeIndex ? "w-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]" : "w-2 bg-gray-600"
               }`}
             />
           ))}
         </div>
         
         <p className="text-xs font-mono font-bold text-gray-400 uppercase tracking-widest bg-slate-950/80 px-4 py-1.5 rounded-full border border-white/5 shadow-md">
-          Developer <span className="text-cyan-400 font-extrabold">{currentIndex + 1}</span> of <span className="text-gray-300">{developers.length}</span>
+          Developer <span className="text-cyan-400 font-extrabold">{safeIndex + 1}</span> of <span className="text-gray-300">{developers.length}</span>
         </p>
       </div>
     </div>

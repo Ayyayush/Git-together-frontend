@@ -1,9 +1,10 @@
 // FeedCard.jsx
+import { useState } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { updateFeed } from "../utils/feedSlice";
-import { FaCheckCircle, FaHeart, FaTimes, FaUser, FaCrown, FaCheck } from "react-icons/fa";
+import { FaCheckCircle, FaHeart, FaTimes, FaUser, FaCrown, FaCheck, FaSpinner } from "react-icons/fa";
 import { BASE_URL } from "../utils/constants";
 import toast from "react-hot-toast";
 
@@ -11,21 +12,19 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // UX Optimization States
+  const [activeAction, setActiveAction] = useState(null); // 'interested' | 'ignored' | null
+  const [isRemoving, setIsRemoving] = useState(false);
+
   if (!info) {
     return null;
   }
 
   const handleSendRequest = async (status) => {
-    if (!info?._id) {
-      console.error("User ID is missing:", info);
-      toast.error("Invalid user data.");
-      return;
-    }
+    if (!info?._id || activeAction) return;
 
     try {
-      console.log("Sending Request");
-      console.log("Status:", status);
-      console.log("User ID:", info._id);
+      setActiveAction(status);
 
       await axios.post(
         `${BASE_URL}/request/send/${status}/${info._id}`,
@@ -41,20 +40,28 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
           : "User Ignored"
       );
 
-      if (onActionSuccess) {
-        onActionSuccess(info._id);
-      } else {
-        dispatch(updateFeed(info._id));
-      }
+      // Trigger structural fade/scale out animation
+      setIsRemoving(true);
+
+      // Await exit animation duration (300ms matches transition utilities)
+      setTimeout(() => {
+        if (onActionSuccess) {
+          onActionSuccess(info._id);
+        } else {
+          dispatch(updateFeed(info._id));
+        }
+      }, 300);
+
     } catch (err) {
       console.error(err);
-
-      const message =
-        err?.response?.data?.message || "Something went wrong. Try again.";
-
+      const message = err?.response?.data?.message || "Something went wrong. Try again.";
       toast.error(message);
+      // Re-enable interactive controls on error state rollbacks
+      setActiveAction(null);
     }
   };
+
+  const isProcessing = activeAction !== null;
 
   return (
     <div
@@ -63,8 +70,8 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
                  bg-gradient-to-b from-[#161b27]/95 to-[#0B0E14]/95
                  shadow-[0_25px_70px_rgba(0,0,0,0.65)]
                  backdrop-blur-md
-                 transition-all duration-300
-                 hover:-translate-y-2
+                 transition-all duration-300 transform
+                 ${isRemoving ? "opacity-0 scale-95 translate-y-4 pointer-events-none" : "hover:-translate-y-2"}
                  ${isRecommendation ? "border-2 border-indigo-500/30 hover:shadow-indigo-500/30" : "border border-white/10 hover:shadow-indigo-500/25"}`}
     >
       <div className="relative h-[320px] flex items-center justify-center">
@@ -160,8 +167,9 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
 
         {/* View Profile Platform Button */}
         <button
+          disabled={isProcessing}
           onClick={() => navigate(`/profile/${info._id}`)}
-          className="mt-4 inline-flex items-center gap-1.5 text-xs font-mono font-bold text-indigo-400 border border-indigo-500/30 px-3 py-1.5 rounded-lg bg-indigo-500/5 hover:bg-indigo-500/10 transition-all"
+          className="mt-4 inline-flex items-center gap-1.5 text-xs font-mono font-bold text-indigo-400 border border-indigo-500/30 px-3 py-1.5 rounded-lg bg-indigo-500/5 hover:bg-indigo-500/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <FaUser size={10} />
           View Profile
@@ -170,6 +178,7 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
 
       <div className="flex justify-between items-center gap-3 px-6 py-4 bg-black/30">
         <button
+          disabled={isProcessing}
           onClick={() => handleSendRequest("ignored")}
           className="group relative flex flex-1 items-center justify-center gap-2 py-2
                      rounded-full
@@ -181,13 +190,19 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
                      hover:bg-red-500 hover:text-white hover:border-red-500/80
                      hover:shadow-[0_8px_20px_-6px_rgba(239,68,68,0.55)]
                      active:scale-[0.97] active:shadow-[0_2px_8px_-3px_rgba(239,68,68,0.45)]
-                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]"
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]
+                     disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500/[0.08] disabled:hover:text-red-400 disabled:hover:border-red-500/25 disabled:hover:shadow-none disabled:active:scale-100"
         >
-          <FaTimes className="text-[12px] transition-transform duration-200 group-active:scale-90" />
-          <span>Next Time</span>
+          {activeAction === "ignored" ? (
+            <FaSpinner className="text-[12px] animate-spin" />
+          ) : (
+            <FaTimes className="text-[12px] transition-transform duration-200 group-active:scale-90" />
+          )}
+          <span>{activeAction === "ignored" ? "Ignoring..." : "Next Time"}</span>
         </button>
 
         <button
+          disabled={isProcessing}
           onClick={() => handleSendRequest("interested")}
           className="group relative flex flex-1 items-center justify-center gap-2 py-2
                      rounded-full
@@ -198,10 +213,15 @@ const FeedCard = ({ info, isRecommendation = false, onActionSuccess }) => {
                      hover:shadow-[0_10px_26px_-5px_rgba(34,211,238,0.6)]
                      hover:brightness-110
                      active:scale-[0.97] active:brightness-95
-                     focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]"
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0E14]
+                     disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:brightness-100 disabled:active:scale-100"
         >
-          <FaHeart className="text-[12px] transition-transform duration-200 group-hover:scale-110 group-active:scale-90" />
-          <span>Collaborate</span>
+          {activeAction === "interested" ? (
+            <FaSpinner className="text-[12px] animate-spin" />
+          ) : (
+            <FaHeart className="text-[12px] transition-transform duration-200 group-hover:scale-110 group-active:scale-90" />
+          )}
+          <span>{activeAction === "interested" ? "Sending..." : "Collaborate"}</span>
         </button>
       </div>
     </div>

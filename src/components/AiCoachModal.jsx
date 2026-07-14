@@ -3,21 +3,37 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   FaRobot, FaTimes, FaMagic, FaCopy, FaCheck, FaSyncAlt,
   FaUserTag, FaIdCard, FaCode, FaFolderOpen, FaBriefcase, FaShareAlt, FaCogs,
-  FaCheckCircle, FaExclamationTriangle, FaLightbulb, FaPlusCircle, FaPenFancy
+  FaCheckCircle, FaExclamationTriangle, FaLightbulb, FaPlusCircle, FaPenFancy,
+  FaPaperPlane, FaCommentDots, FaUser
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-const AiCoachModal = ({ isOpen, onClose, onAction, dataProfile }) => {
+const AiCoachModal = ({ isOpen, onClose, onAction, onChatMessage, dataProfile }) => {
   const [suggestions, setSuggestions] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  // --- Chat state ---
+  const [chatMessages, setChatMessages] = useState([]); // { role: 'user' | 'assistant', content: string }
+  const [chatInput, setChatInput] = useState("");
+  const [isChatSending, setIsChatSending] = useState(false);
+
   const resultsEndRef = useRef(null);
+  const chatEndRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   useEffect(() => {
     if (suggestions && resultsEndRef.current) {
       resultsEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [suggestions]);
+
+  // Auto-scroll to latest chat message / typing indicator.
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [chatMessages, isChatSending]);
 
   if (!isOpen) return null;
 
@@ -93,8 +109,53 @@ const AiCoachModal = ({ isOpen, onClose, onAction, dataProfile }) => {
     return "text-red-400 border-red-500/30 bg-red-500/10";
   };
 
+  // --- Chat handlers ---
+
+  const handleSendChatMessage = async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || isChatSending) return;
+
+    if (typeof onChatMessage !== "function") {
+      toast.error("AI Coach chat is not available right now.");
+      return;
+    }
+
+    // History sent to the backend is the conversation *before* this turn,
+    // so the server can rebuild full context without needing session state.
+    const historyForRequest = chatMessages;
+
+    setChatMessages((prev) => [...prev, { role: "user", content: trimmed }]);
+    setChatInput("");
+    setIsChatSending(true);
+
+    try {
+      const response = await onChatMessage(trimmed, historyForRequest, suggestions);
+      if (response && response.success && response.reply) {
+        setChatMessages((prev) => [...prev, { role: "assistant", content: response.reply }]);
+      } else {
+        const fallback = response?.message || "Unable to reach the AI Coach right now.";
+        setChatMessages((prev) => [...prev, { role: "assistant", content: fallback }]);
+        toast.error(fallback);
+      }
+    } catch (err) {
+      const fallback = "Unable to reach the AI Coach right now.";
+      setChatMessages((prev) => [...prev, { role: "assistant", content: fallback }]);
+      toast.error(fallback);
+    } finally {
+      setIsChatSending(false);
+      if (chatInputRef.current) chatInputRef.current.focus();
+    }
+  };
+
+  const handleChatKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendChatMessage();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-opacity duration-300 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md transition-opacity duration-300 animate-fade-in">
       <div className="relative w-full max-w-3xl h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-2xl shadow-2xl overflow-hidden text-gray-100">
 
         {/* TOP STATUS GLOW BAR */}
@@ -279,6 +340,86 @@ const AiCoachModal = ({ isOpen, onClose, onAction, dataProfile }) => {
               )}
 
               <div ref={resultsEndRef} />
+
+              {/* ===================== CONVERSATION ===================== */}
+              <div className="pt-2 border-t border-white/10">
+                <h3 className="text-xs font-bold text-gray-200 font-mono tracking-widest uppercase mb-3 flex items-center gap-2 mt-4">
+                  <FaCommentDots className="text-purple-400" /> Conversation
+                </h3>
+
+                <div className="rounded-xl border border-white/5 bg-white/[0.01] p-4 space-y-3 min-h-[80px]">
+                  {chatMessages.length === 0 && !isChatSending && (
+                    <p className="text-[11px] text-gray-500 font-mono italic">
+                      Ask a follow-up — e.g. "improve my About section", "roast my profile", or "what should I learn next?"
+                    </p>
+                  )}
+
+                  {chatMessages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                    >
+                      <div
+                        className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center border ${
+                          msg.role === "user"
+                            ? "bg-indigo-500/20 border-indigo-500/30 text-indigo-300"
+                            : "bg-purple-500/20 border-purple-500/30 text-purple-300"
+                        }`}
+                      >
+                        {msg.role === "user" ? <FaUser size={11} /> : <FaRobot size={12} />}
+                      </div>
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap shadow-md ${
+                          msg.role === "user"
+                            ? "bg-indigo-600/80 text-white rounded-tr-sm"
+                            : "bg-white/[0.05] border border-white/10 text-gray-200 rounded-tl-sm"
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* TYPING INDICATOR */}
+                  {isChatSending && (
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center border bg-purple-500/20 border-purple-500/30 text-purple-300">
+                        <FaRobot size={12} />
+                      </div>
+                      <div className="rounded-2xl rounded-tl-sm px-4 py-3 bg-white/[0.05] border border-white/10 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* CHAT INPUT ROW */}
+                <div className="mt-3 flex items-end gap-2">
+                  <textarea
+                    ref={chatInputRef}
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleChatKeyDown}
+                    disabled={isChatSending}
+                    placeholder="Ask the AI Coach anything about your profile..."
+                    rows={1}
+                    className="flex-1 resize-none rounded-xl bg-white/[0.03] border border-white/10 focus:border-purple-500/40 focus:outline-none text-xs text-gray-200 placeholder-gray-500 px-3.5 py-2.5 font-sans leading-relaxed disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleSendChatMessage}
+                    disabled={isChatSending || !chatInput.trim()}
+                    className="btn btn-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono font-bold text-[11px] px-4 py-2.5 h-auto border-none shadow-lg shadow-purple-900/40 flex items-center gap-1.5"
+                  >
+                    <FaPaperPlane size={11} /> Send
+                  </button>
+                </div>
+              </div>
+              {/* =================== END CONVERSATION ==================== */}
+
             </div>
           )}
 
