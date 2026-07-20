@@ -7,7 +7,7 @@ import axios from 'axios';
 import { BASE_URL } from '../utils/constants';
 import AiCoachModal from './AiCoachModal';
 
-const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, userProfileData }) => {
+const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, onAiCoachOpen, onAiCoachClose, userProfileData }) => {
   const navigate = useNavigate();
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
   const [showFeatureModal, setShowFeatureModal] = useState(false);
@@ -15,6 +15,12 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, userProfileData }) =
   const handleOptimizeProfile = () => {
     if (typeof onCloseDrawer === "function") onCloseDrawer();
     setIsCoachModalOpen(true);
+    if (typeof onAiCoachOpen === "function") onAiCoachOpen();
+  };
+
+  const handleCloseCoachModal = () => {
+    setIsCoachModalOpen(false);
+    if (typeof onAiCoachClose === "function") onAiCoachClose();
   };
 
   const handleTriggerProfileAudit = async () => {
@@ -205,7 +211,7 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, userProfileData }) =
 
         <AiCoachModal 
           isOpen={isCoachModalOpen} 
-          onClose={() => setIsCoachModalOpen(false)} 
+          onClose={handleCloseCoachModal} 
           onAction={handleTriggerProfileAudit}
           onChatMessage={handleAiCoachChat}
           dataProfile={userProfileData}

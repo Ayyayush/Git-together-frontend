@@ -28,6 +28,9 @@ const Signup = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState(null); // "checking" | "available" | "taken"
+  const [usernameMessage, setUsernameMessage] = useState("");
+  const usernameCheckTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const authenticatedUser = useSelector((state) => state.user);
 
@@ -38,6 +41,48 @@ const Signup = () => {
       isMounted.current = false;
     };
   }, []);
+
+  // Debounced username availability check
+  useEffect(() => {
+    if (usernameCheckTimeoutRef.current) {
+      clearTimeout(usernameCheckTimeoutRef.current);
+    }
+
+    if (!user.username || user.username.length < 3) {
+      setUsernameStatus(null);
+      setUsernameMessage("");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    usernameCheckTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/auth/check-username`, {
+          params: { username: user.username },
+        });
+        if (isMounted.current) {
+          if (res.data.available) {
+            setUsernameStatus("available");
+            setUsernameMessage(res.data.message);
+          } else {
+            setUsernameStatus("taken");
+            setUsernameMessage(res.data.message);
+          }
+        }
+      } catch (err) {
+        if (isMounted.current) {
+          setUsernameStatus("taken");
+          setUsernameMessage("Error checking username availability");
+        }
+      }
+    }, 500); // Debounce for 500ms
+
+    return () => {
+      if (usernameCheckTimeoutRef.current) {
+        clearTimeout(usernameCheckTimeoutRef.current);
+      }
+    };
+  }, [user.username]);
 
   useEffect(() => {
     if (authenticatedUser && authenticatedUser.username) {
@@ -64,6 +109,11 @@ const Signup = () => {
 
     if (user.firstName.length < 2) {
       setError("First name must be at least 2 characters long.");
+      return;
+    }
+
+    if (usernameStatus !== "available") {
+      setError("Please choose an available username.");
       return;
     }
 
@@ -158,6 +208,22 @@ const Signup = () => {
                     className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
                 </div>
+                
+                {/* Username Availability Status */}
+                {user.username && user.username.length >= 3 && (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono ${
+                    usernameStatus === "checking" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30" :
+                    usernameStatus === "available" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" :
+                    "bg-red-500/10 text-red-400 border border-red-500/30"
+                  }`}>
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      usernameStatus === "checking" ? "bg-yellow-400 animate-pulse" :
+                      usernameStatus === "available" ? "bg-emerald-400" :
+                      "bg-red-400"
+                    }`} />
+                    {usernameMessage || "Checking..."}
+                  </div>
+                )}
 
                 {/* Email Field */}
                 <div className="relative">

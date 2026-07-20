@@ -42,6 +42,7 @@ const Feed = () => {
   // Mobile/Tablet Slide-over Drawer States
   const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(false);
   const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(false);
+  const [isAiCoachModalOpen, setIsAiCoachModalOpen] = useState(false);
 
   const currentPath = location.pathname;
 
@@ -244,7 +245,12 @@ const Feed = () => {
             <button onClick={() => setIsRightDrawerOpen(false)} className="btn btn-xs btn-circle btn-outline text-gray-400">✕</button>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <RightSidebar setShowPremiumModal={setShowPremiumModal} onCloseDrawer={() => setIsRightDrawerOpen(false)} />
+            <RightSidebar 
+              setShowPremiumModal={setShowPremiumModal} 
+              onCloseDrawer={() => setIsRightDrawerOpen(false)}
+              onAiCoachOpen={() => setIsAiCoachModalOpen(true)}
+              onAiCoachClose={() => setIsAiCoachModalOpen(false)}
+            />
           </div>
         </div>
       </div>
@@ -307,6 +313,7 @@ const Feed = () => {
                     developers={recommendations}
                     isRecommendation={true}
                     onActionSuccess={handleRecommendationAction}
+                    hideArrows={isAiCoachModalOpen}
                   />
                 </div>
               ) : (
@@ -329,6 +336,7 @@ const Feed = () => {
                     developers={feedList}
                     isRecommendation={false}
                     onActionSuccess={handleGlobalAction}
+                    hideArrows={isAiCoachModalOpen}
                   />
 
                   {/* Infinite scroll sentinel — observed via IntersectionObserver */}
@@ -370,7 +378,11 @@ const Feed = () => {
         {/* RIGHT SIDEBAR PERSISTENT PANEL */}
         <div className="hidden xl:block xl:col-span-3">
           <div className="sticky top-20 z-20">
-            <RightSidebar setShowPremiumModal={setShowPremiumModal} />
+            <RightSidebar 
+              setShowPremiumModal={setShowPremiumModal}
+              onAiCoachOpen={() => setIsAiCoachModalOpen(true)}
+              onAiCoachClose={() => setIsAiCoachModalOpen(false)}
+            />
           </div>
         </div>
 

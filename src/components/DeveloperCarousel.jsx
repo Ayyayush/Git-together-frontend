@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import FeedCard from "./FeedCard";
 
-const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess, onActionFailure }) => {
+const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess, onActionFailure, hideArrows = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -121,16 +121,18 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess, onAc
         {/* Card and Navigation Relative Wrapper Container */}
         <div className="relative inline-flex items-center justify-center">
           
-          {/* Left Control Arrow */}
-          <button
-            type="button"
-            onClick={handlePrev}
-            disabled={safeIndex === 0}
-            className="absolute -left-6 sm:-left-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
-            aria-label="Previous Developer"
-          >
-            <FaChevronLeft className="text-white group-hover:text-cyan-300 transition-colors duration-250" size={24} />
-          </button>
+          {/* Left Control Arrow - Hidden when hideArrows is true */}
+          {!hideArrows && (
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={safeIndex === 0}
+              className="absolute -left-6 sm:-left-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
+              aria-label="Previous Developer"
+            >
+              <FaChevronLeft className="text-white group-hover:text-cyan-300 transition-colors duration-250" size={24} />
+            </button>
+          )}
 
           {/* Dynamic Card Segment */}
           <div 
@@ -148,16 +150,18 @@ const DeveloperCarousel = ({ developers, isRecommendation, onActionSuccess, onAc
             />
           </div>
 
-          {/* Right Control Arrow */}
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={safeIndex === developers.length - 1}
-            className="absolute -right-6 sm:-right-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
-            aria-label="Next Developer"
-          >
-            <FaChevronRight className="text-white group-hover:text-cyan-300 transition-colors duration-250" size={24} />
-          </button>
+          {/* Right Control Arrow - Hidden when hideArrows is true */}
+          {!hideArrows && (
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={safeIndex === developers.length - 1}
+              className="absolute -right-6 sm:-right-8 z-30 flex items-center justify-center w-14 h-14 rounded-full border border-indigo-500/30 bg-slate-950/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.7),_0_0_2px_rgba(99,102,241,0.2)] transition-all duration-250 ease-in-out hover:scale-110 hover:border-cyan-400 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(34,211,238,0.45)] active:scale-95 disabled:opacity-15 disabled:pointer-events-none group"
+              aria-label="Next Developer"
+            >
+              <FaChevronRight className="text-white group-hover:text-cyan-300 transition-colors duration-250" size={24} />
+            </button>
+          )}
 
         </div>
       </div>
