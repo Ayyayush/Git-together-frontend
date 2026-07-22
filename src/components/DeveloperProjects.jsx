@@ -30,8 +30,8 @@ const DeveloperProjects = ({ projects }) => {
                 )}
               </div>
             </div>
-            {proj.techStack && (
-              <p className="text-gray-500 font-mono text-[10px] mt-0.5">{proj.techStack}</p>
+            {proj.techStack && proj.techStack.length > 0 && (
+              <p className="text-gray-500 font-mono text-[10px] mt-0.5">{Array.isArray(proj.techStack) ? proj.techStack.join(", ") : proj.techStack}</p>
             )}
             {proj.description && (
               <p className="text-gray-400 mt-1">{proj.description}</p>

@@ -1,8 +1,6 @@
-// src/components/Navbar.jsx
 import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "../utils/userSlice";
-import { toggleTheme } from "../utils/themeSlice";
 import { setSearch } from "../utils/feedSlice";
 import { setNotificationsData, addNotificationItem, markItemAsRead } from "../utils/notificationSlice";
 
@@ -17,8 +15,6 @@ import { formatDistanceToNow } from "date-fns";
 import {
   FaBell,
   FaEnvelope,
-  FaSun,
-  FaMoon,
   FaUser,
   FaSignOutAlt,
   FaUsers,
@@ -31,7 +27,6 @@ import {
 
 const Navbar = () => {
   const user = useSelector((state) => state.user);
-  const { theme } = useSelector((state) => state.theme);
   const { notifications, unreadCount } = useSelector((state) => state.notifications || { notifications: [], unreadCount: 0 });
 
   const [localSearch, setLocalSearch] = useState("");
@@ -44,11 +39,6 @@ const Navbar = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   useEffect(() => {
     if (!user) return;
@@ -390,19 +380,6 @@ const Navbar = () => {
                   <Link to="/request" className="hover:bg-base-200 rounded-lg">
                     <FaHandshake /> Requests
                   </Link>
-                </li>
-
-                <div className="divider my-2 border-base-300" />
-
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => dispatch(toggleTheme())}
-                    className="hover:bg-base-200 transition-all duration-200 py-2 rounded-lg"
-                  >
-                    {theme === "dark" ? <FaSun /> : <FaMoon />}
-                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                  </button>
                 </li>
 
                 <li className="mt-2">

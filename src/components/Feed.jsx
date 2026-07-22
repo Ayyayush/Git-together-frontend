@@ -1,4 +1,3 @@
-// Feed.jsx
 import { useEffect, useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -313,7 +312,7 @@ const Feed = () => {
                     developers={recommendations}
                     isRecommendation={true}
                     onActionSuccess={handleRecommendationAction}
-                    hideArrows={isAiCoachModalOpen}
+                    hideArrows={isAiCoachModalOpen || showPremiumModal}
                   />
                 </div>
               ) : (
@@ -336,7 +335,7 @@ const Feed = () => {
                     developers={feedList}
                     isRecommendation={false}
                     onActionSuccess={handleGlobalAction}
-                    hideArrows={isAiCoachModalOpen}
+                    hideArrows={isAiCoachModalOpen || showPremiumModal}
                   />
 
                   {/* Infinite scroll sentinel — observed via IntersectionObserver */}

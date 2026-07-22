@@ -6,9 +6,11 @@ import { useSelector } from "react-redux";
 
 const Body = () => {
   const user = useSelector((state) => state.user);
+  const { theme } = useSelector((state) => state.theme);
+  const isDark = theme === "dark";
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0B0E14]">
+    <div className={`flex flex-col min-h-screen ${isDark ? "bg-[#0B0E14]" : "bg-gray-50"}`}>
       <Navbar />
       {user ? (
         <div className="flex flex-1 relative overflow-hidden">

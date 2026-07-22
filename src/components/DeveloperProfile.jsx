@@ -16,6 +16,7 @@ const DeveloperProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [alreadyRequested, setAlreadyRequested] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,9 +60,15 @@ const DeveloperProfile = () => {
         { withCredentials: true }
       );
       toast.success("Connection request sent 🚀");
+      setAlreadyRequested(true);
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to send request";
       toast.error(msg);
+      if (msg.includes("Already Exists")) {
+        // Already connected or already requested — stop offering "Connect"
+        // so the user doesn't keep re-triggering the same 400.
+        setAlreadyRequested(true);
+      }
     } finally {
       setActionLoading(false);
     }
@@ -197,9 +204,9 @@ const DeveloperProfile = () => {
                         </div>
                       </div>
                       <p className="text-xs text-gray-400 leading-relaxed">{project.description}</p>
-                      {project.techStack && (
+                      {project.techStack && project.techStack.length > 0 && (
                         <p className="text-[11px] font-mono text-gray-500 truncate">
-                          Tech: {project.techStack}
+                          Tech: {Array.isArray(project.techStack) ? project.techStack.join(", ") : project.techStack}
                         </p>
                       )}
                     </div>
@@ -216,13 +223,13 @@ const DeveloperProfile = () => {
               <button
                 type="button"
                 onClick={handleConnect}
-                disabled={actionLoading}
+                disabled={actionLoading || alreadyRequested}
                 className="w-full rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 py-2.5 text-xs font-bold text-white shadow-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {actionLoading && (
                   <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                 )}
-                Connect
+                {alreadyRequested ? "Request Sent" : "Connect"}
               </button>
               <button
                 type="button"

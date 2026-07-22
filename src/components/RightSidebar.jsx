@@ -1,8 +1,6 @@
-// components/RightSidebar.jsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFire, FaUserPlus, FaRobot, FaCrown, FaCalendarAlt, FaQuoteLeft, FaTimes } from "react-icons/fa";
+import { FaFire, FaUserPlus, FaRobot, FaCrown, FaCalendarAlt, FaQuoteLeft } from "react-icons/fa";
 import axios from 'axios';
 import { BASE_URL } from '../utils/constants';
 import AiCoachModal from './AiCoachModal';
@@ -10,7 +8,6 @@ import AiCoachModal from './AiCoachModal';
 const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, onAiCoachOpen, onAiCoachClose, userProfileData }) => {
   const navigate = useNavigate();
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
-  const [showFeatureModal, setShowFeatureModal] = useState(false);
 
   const handleOptimizeProfile = () => {
     if (typeof onCloseDrawer === "function") onCloseDrawer();
@@ -37,9 +34,6 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, onAiCoachOpen, onAiC
     }
   };
 
-  // Sends a follow-up chat message to the AI Coach, carrying the full
-  // conversation history and the already-generated suggestions so the
-  // backend has full context without needing server-side session state.
   const handleAiCoachChat = async (message, history, suggestions) => {
     try {
       const res = await axios.post(
@@ -61,7 +55,7 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, onAiCoachOpen, onAiC
 
   const handlePremiumUpgrade = () => {
     if (typeof onCloseDrawer === "function") onCloseDrawer();
-    setShowFeatureModal(true);
+    setShowPremiumModal(true);
   };
 
   return (
@@ -217,72 +211,6 @@ const RightSidebar = ({ setShowPremiumModal, onCloseDrawer, onAiCoachOpen, onAiC
           dataProfile={userProfileData}
         />
       </aside>
-
-      {/* MODERN COMING SOON MODAL BACKDROP */}
-      {showFeatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-opacity">
-          <div className="relative w-full max-w-sm rounded-2xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Close Button */}
-            <button 
-              onClick={() => setShowFeatureModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <FaTimes size={14} />
-            </button>
-
-            {/* Modal Content */}
-            <div className="text-center mt-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg mb-4">
-                <FaCrown size={22} />
-              </div>
-              
-              <h3 className="text-lg font-bold text-gray-100 tracking-tight">⭐ Premium Membership</h3>
-              <span className="inline-block mt-1 text-[10px] bg-amber-500 text-slate-950 font-mono font-black px-2 py-0.5 rounded uppercase tracking-wider">
-                Coming Soon
-              </span>
-              <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-                Premium memberships are currently under development.
-              </p>
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-white/5">
-              <p className="text-[11px] font-bold text-indigo-400 tracking-wider font-mono mb-2.5 uppercase">
-                Planned features include:
-              </p>
-              <ul className="text-xs text-gray-300 space-y-2.5">
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
-                  <span>Unlimited connection requests</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
-                  <span>AI-powered profile enhancement</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
-                  <span>Priority developer discovery</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
-                  <span>Advanced networking filters</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-400 mt-0.5">•</span>
-                  <span>Premium developer badge</span>
-                </li>
-              </ul>
-            </div>
-
-            <button 
-              onClick={() => setShowFeatureModal(false)}
-              className="mt-6 w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-mono font-black text-xs shadow-xl transition-all hover:brightness-110 tracking-wider"
-            >
-              GOT IT
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

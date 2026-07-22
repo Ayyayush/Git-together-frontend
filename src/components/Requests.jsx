@@ -12,7 +12,7 @@ const Requests = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const receivedRequests = useSelector((state) => state.requests.received);
-  
+
   // Track specific request IDs currently sending an API update to prevent spam
   const [processingId, setProcessingId] = useState(null);
 
@@ -30,16 +30,22 @@ const Requests = () => {
 
   const handleRequest = async (requestId, status) => {
     if (processingId) return; // Prevent concurrent modifications
-    
+
+    // Map UI status labels to the actual backend endpoint contract:
+    // POST /request/accept/:requestId and POST /request/reject/:requestId
+    const endpointAction = status === "accepted" ? "accept" : "reject";
+
     try {
       setProcessingId(requestId);
-      await axios.post(
-        `${BASE_URL}/request/review/${status}/${requestId}`,
+      const res = await axios.post(
+        `${BASE_URL}/request/${endpointAction}/${requestId}`,
         {},
         { withCredentials: true }
       );
 
-      dispatch(removeReceivedRequest(requestId));
+      if (res.status >= 200 && res.status < 300) {
+        dispatch(removeReceivedRequest(requestId));
+      }
     } catch (err) {
       console.error(`Request action [${status}] failed`, err);
     } finally {
@@ -59,7 +65,6 @@ const Requests = () => {
   return (
     <div className="min-h-screen bg-[#0B0E14] p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
-        
         {/* Header Block */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-100 tracking-tight">

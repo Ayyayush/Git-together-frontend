@@ -5,10 +5,20 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FiGithub, FiExternalLink, FiMapPin, FiBriefcase, FiMessageSquare } from "react-icons/fi";
 
-import { Base_URL, skillList } from "../utils/helper/constant";
+import { BASE_URL, skillList } from "../utils/constants";
 import { removeUserFromFeed } from "../utils/feedSlice";
-import { calculateSkillMatch } from "../utils/skillMatch";
 import UserCardModal from "./UserCardModal";
+
+// Local skill-overlap helper (no such utility existed anywhere in the project
+// under ../utils/skillMatch, so it is defined here rather than invented as a
+// new shared module).
+const calculateSkillMatch = (mySkills = [], theirSkills = []) => {
+  const commonSkills = theirSkills.filter((skill) => mySkills.includes(skill));
+  const percentage = theirSkills.length > 0
+    ? Math.round((commonSkills.length / theirSkills.length) * 100)
+    : 0;
+  return { percentage, commonSkills };
+};
 
 const UserCard = ({ user }) => {
   const dispatch = useDispatch();
@@ -22,7 +32,7 @@ const UserCard = ({ user }) => {
   const handleSendRequest = async (status) => {
     try {
       await axios.post(
-        `${Base_URL}/request/send/${status}/${user._id}`,
+        `${BASE_URL}/request/send/${status}/${user._id}`,
         {},
         { withCredentials: true }
       );
@@ -36,7 +46,7 @@ const UserCard = ({ user }) => {
 
   const handleChatClick = async () => {
     try {
-      const res = await axios.get(`${Base_URL}/user/is-connected/${user._id}`, {
+      const res = await axios.get(`${BASE_URL}/user/is-connected/${user._id}`, {
         withCredentials: true,
       });
       if (res.data.isConnected) {
