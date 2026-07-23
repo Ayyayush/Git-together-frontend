@@ -89,7 +89,7 @@ const ProfileForm = ({ formData, handleChange, handleSubmit, loading }) => {
               <option value="">Select gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
-              <option value="Others">Others</option>
+              <option value="Other">Other</option>
             </select>
           </div>
           <div>
@@ -102,10 +102,12 @@ const ProfileForm = ({ formData, handleChange, handleSubmit, loading }) => {
               onChange={handleChange}
               className="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2.5 text-sm text-gray-100 outline-none focus:border-indigo-500 [&>option]:bg-[#0B0E14]"
             >
+              <option value="">Select availability</option>
+              <option value="Open to Internship">Open to Internship</option>
               <option value="Open to Jobs">Open to Jobs</option>
               <option value="Open to Freelance">Open to Freelance</option>
-              <option value="Hiring Developers">Hiring Developers</option>
-              <option value="Closed / Cryptic">Closed / Cryptic</option>
+              <option value="Hackathons">Hackathons</option>
+              <option value="Mentorship">Mentorship</option>
             </select>
           </div>
         </div>
@@ -199,11 +201,10 @@ const ProfileForm = ({ formData, handleChange, handleSubmit, loading }) => {
                 className="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-2 text-xs text-gray-100 outline-none [&>option]:bg-[#0B0E14]"
               >
                 <option value="">Select Tier Rank</option>
-                <option value="Intern">Intern / Protocol Candidate</option>
                 <option value="Junior">Junior Executable</option>
                 <option value="Mid">Mid-Level Core</option>
                 <option value="Senior">Senior Infrastructure</option>
-                <option value="Lead/Principal">Lead / Principal Component</option>
+                <option value="Lead">Lead / Principal Component</option>
               </select>
             </div>
           </div>

@@ -159,7 +159,6 @@ const MyProfile = () => {
       const payload = {
         ...formData,
         age: formData.age !== "" ? Number(formData.age) : undefined,
-        profileStrength: calculatedStrength,
       };
       const res = await axios.patch(`${BASE_URL}/profile/edit`, payload, {
         withCredentials: true,
