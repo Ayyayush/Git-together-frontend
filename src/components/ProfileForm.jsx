@@ -1,7 +1,7 @@
 import React from "react";
 import { FiUser, FiMapPin, FiCalendar, FiUsers, FiImage, FiAlignLeft, FiBookOpen, FiBriefcase } from "react-icons/fi";
 
-const ProfileForm = ({ formData, handleChange, handleSubmit, loading }) => {
+const ProfileForm = ({ formData, handleChange, handleSubmit, loading, hasUnsavedChanges }) => {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl p-6 md:p-8">
       <h2 className="text-xl font-bold text-gray-100 mb-6 flex items-center gap-2 border-b border-white/10 pb-3">
@@ -232,14 +232,21 @@ const ProfileForm = ({ formData, handleChange, handleSubmit, loading }) => {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 py-3 text-sm font-bold text-white shadow-xl hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-        >
-          {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-          Commit Updates to Database
-        </button>
+        <div className="space-y-2">
+          {hasUnsavedChanges && (
+            <p className="text-xs text-cyan-400 font-medium">
+              ⚠️ Unsaved changes — Save your profile to keep these changes.
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={loading || !hasUnsavedChanges}
+            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 py-3 text-sm font-bold text-white shadow-xl hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          >
+            {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+            Save Profile Changes
+          </button>
+        </div>
       </form>
     </div>
   );

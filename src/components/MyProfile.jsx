@@ -47,6 +47,7 @@ const MyProfile = () => {
   const [formData, setFormData] = useState(() => EMPTY_FORM(user));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Skill Management Temp State
   const [newSkill, setNewSkill] = useState("");
@@ -64,11 +65,13 @@ const MyProfile = () => {
 
   useEffect(() => {
     if (user) setFormData(EMPTY_FORM(user));
+    setHasUnsavedChanges(false);
   }, [user]);
 
   const handleChange = (e) => {
     if (error) setError("");
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setHasUnsavedChanges(true);
   };
 
   // Profile Strength Calculator Front-end sync matching backend rules
@@ -110,6 +113,8 @@ const MyProfile = () => {
       skills: [...prev.skills, newSkill.trim()],
     }));
     setNewSkill("");
+    setHasUnsavedChanges(true);
+    toast.success("Skill added");
   };
 
   const handleRemoveSkill = (skillToRemove) => {
@@ -117,6 +122,7 @@ const MyProfile = () => {
       ...prev,
       skills: prev.skills.filter((s) => s !== skillToRemove),
     }));
+    setHasUnsavedChanges(true);
   };
 
   const handleProjectAction = (e) => {
@@ -129,13 +135,14 @@ const MyProfile = () => {
     if (editingProjectIndex !== null) {
       updatedProjects[editingProjectIndex] = projectForm;
       setEditingProjectIndex(null);
-      toast.success("Project updated in list");
+      toast.success("Project updated");
     } else {
       updatedProjects.push(projectForm);
-      toast.success("Project added to list");
+      toast.success("Project added");
     }
     setFormData((prev) => ({ ...prev, projects: updatedProjects }));
     setProjectForm({ title: "", description: "", github: "", live: "", techStack: "", image: "" });
+    setHasUnsavedChanges(true);
   };
 
   const handleEditProjectClick = (index) => {
@@ -148,7 +155,8 @@ const MyProfile = () => {
       ...prev,
       projects: prev.projects.filter((_, i) => i !== index),
     }));
-    toast.success("Project removed from list");
+    setHasUnsavedChanges(true);
+    toast.success("Project removed");
   };
 
   const handleSubmit = async (e) => {
@@ -165,6 +173,7 @@ const MyProfile = () => {
       });
       dispatch(addUser(res.data.data || res.data.user));
       toast.success("Profile updated successfully ✨");
+      setHasUnsavedChanges(false);
     } catch (err) {
       const msg = err.response?.data?.message || "Profile update failed";
       setError(msg);
@@ -207,6 +216,7 @@ const MyProfile = () => {
               handleChange={handleChange}
               handleSubmit={handleSubmit}
               loading={loading}
+              hasUnsavedChanges={hasUnsavedChanges}
             />
 
             <SkillManager
