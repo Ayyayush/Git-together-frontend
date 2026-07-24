@@ -23,6 +23,7 @@ import {
   FaEnvelope,
   FaUser,
   FaSlidersH,
+  FaHandshake,
 } from "react-icons/fa";
 
 const FEED_PAGE_LIMIT = 10;
@@ -638,7 +639,7 @@ const Feed = () => {
       </div>
 
       {/* MOBILE/TABLET BOTTOM NAVIGATION */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 px-6 py-2 flex items-center justify-between shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-white/10 px-4 py-2 flex items-center justify-between shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
 
         <button
           onClick={() => navigate("/")}
@@ -652,6 +653,20 @@ const Feed = () => {
           <FaHome size={18} />
           <span className="text-[9px] uppercase font-mono tracking-wider">
             Feed
+          </span>
+        </button>
+
+        <button
+          onClick={() => navigate("/request")}
+          className={`flex flex-col items-center gap-0.5 flex-1 py-1 transition-colors ${
+            currentPath === "/request"
+              ? "text-emerald-400 font-bold"
+              : "text-gray-400 hover:text-gray-200"
+          }`}
+        >
+          <FaHandshake size={18} />
+          <span className="text-[9px] uppercase font-mono tracking-wider">
+            Requests
           </span>
         </button>
 
@@ -687,7 +702,7 @@ const Feed = () => {
           onClick={() => navigate("/profile")}
           className={`flex flex-col items-center gap-0.5 flex-1 py-1 transition-colors ${
             currentPath === "/profile"
-              ? "text-emerald-400 font-bold"
+              ? "text-white font-bold"
               : "text-gray-400 hover:text-gray-200"
           }`}
         >

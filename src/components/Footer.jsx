@@ -41,12 +41,13 @@ const FeatureCards = () => {
           <div
             key={title}
             className="group relative rounded-2xl p-[1px] bg-gradient-to-br from-indigo-500/30 via-white/10 to-cyan-500/30
-                       transition-all duration-300 hover:from-indigo-400/60 hover:to-cyan-400/60"
+                       transition-all duration-300 hover:-translate-y-1.5
+                       hover:from-indigo-400/60 hover:to-cyan-400/60"
           >
             <div
               className="relative h-full rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10
                          p-5 sm:p-6 overflow-hidden transition-all duration-300
-                         group-hover:-translate-y-1.5 group-hover:bg-white/[0.05]"
+                         group-hover:bg-white/[0.05]"
             >
               <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500/20 to-cyan-400/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -57,6 +58,7 @@ const FeatureCards = () => {
               <h3 className="relative text-base font-semibold text-white mb-2 tracking-tight">
                 {title}
               </h3>
+
               <p className="relative text-xs sm:text-sm text-gray-400 leading-relaxed">
                 {description}
               </p>
@@ -76,6 +78,7 @@ const CreatedBy = () => {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 px-4 py-2 rounded-full
                    bg-white/5 backdrop-blur-md
@@ -85,6 +88,7 @@ const CreatedBy = () => {
                    transition"
       >
         <span>Created by</span>
+
         <span
           className={`text-[10px] sm:text-xs transition-transform ${
             open ? "rotate-180" : ""
@@ -147,6 +151,7 @@ const FooterColumn = ({ title, items }) => (
     <h4 className="text-sm font-semibold text-white tracking-wide mb-3 sm:mb-4">
       {title}
     </h4>
+
     <ul className="space-y-2.5 text-center sm:text-left">
       {items.map((item) => (
         <li key={item}>
@@ -179,13 +184,17 @@ const Footer = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-6">
         <div className="mb-8 h-px bg-white/10" />
 
-        {/* Responsive layout: Single column on tiny screens, 3-column configuration on small screens and up */}
         <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr] gap-8 text-center sm:text-left">
           <div className="flex flex-col items-center sm:items-start">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-white/5 backdrop-blur border border-white/10">
-                <img src={logo} alt="GitTogether Logo" className="w-8 h-8" />
+                <img
+                  src={logo}
+                  alt="GitTogether Logo"
+                  className="w-8 h-8"
+                />
               </div>
+
               <h2 className="text-lg font-semibold text-white tracking-tight">
                 GitTogether
               </h2>

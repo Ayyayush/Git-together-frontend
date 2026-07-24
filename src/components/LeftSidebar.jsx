@@ -55,7 +55,7 @@ const LeftSidebar = ({ setShowPremiumModal, onCloseDrawer }) => {
   const totalSkills = Array.isArray(user.skills) ? user.skills.length : 0;
 
   return (
-    <aside className="w-full h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar flex flex-col gap-5 pb-24 md:pb-6 pr-2">
+    <aside className="w-full flex flex-col gap-5 pb-24 md:pb-6 pr-2">
       
       {/* DEVELOPER CARD */}
       <div className="flex-shrink-0 relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 shadow-2xl transition-all hover:border-indigo-500/30">
