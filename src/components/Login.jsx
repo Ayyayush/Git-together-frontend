@@ -21,7 +21,11 @@ import { loginValidation } from "../utils/validation";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Login = () => {
-  const [user, setUser] = useState({ emailId: "", password: "" });
+  const [user, setUser] = useState({
+    emailId: "",
+    password: "",
+  });
+
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [newUsername, setNewUsername] = useState("");
@@ -35,7 +39,10 @@ const Login = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const authenticatedUser = useSelector((state) => state.user);
+
+  /* ================= AUTH REDIRECT ================= */
 
   useEffect(() => {
     if (authenticatedUser) {
@@ -46,6 +53,8 @@ const Login = () => {
       }
     }
   }, [authenticatedUser, navigate]);
+
+  /* ================= USERNAME AVAILABILITY ================= */
 
   useEffect(() => {
     if (!newUsername) {
@@ -58,7 +67,9 @@ const Login = () => {
 
     if (!usernameRegex.test(newUsername)) {
       setUsernameValid(false);
-      setModalError("Lowercase letters, numbers, and underscores only.");
+      setModalError(
+        "Lowercase letters, numbers, and underscores only."
+      );
       return;
     }
 
@@ -94,15 +105,25 @@ const Login = () => {
     return () => clearTimeout(delayDebounce);
   }, [newUsername]);
 
+  /* ================= INPUT ================= */
+
   const handleInputData = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    setUser({
+      ...user,
+      [e.target.name]: e.target.value,
+    });
   };
+
+  /* ================= FETCH USER ================= */
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/profile/view`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${BASE_URL}/profile/view`,
+        {
+          withCredentials: true,
+        }
+      );
 
       return response.data.data;
     } catch (error) {
@@ -110,11 +131,17 @@ const Login = () => {
     }
   };
 
+  /* ================= LOGIN ================= */
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
 
-    const isValid = loginValidation({ user, setError });
+    const isValid = loginValidation({
+      user,
+      setError,
+    });
 
     if (!isValid) return;
 
@@ -132,22 +159,30 @@ const Login = () => {
         }
       );
 
-      toast.success(response?.data?.message || "Login successful");
+      toast.success(
+        response?.data?.message || "Login successful"
+      );
 
       const userData = await fetchUserData();
 
       if (!userData) {
-        setError("Unable to load your profile. Please try again.");
+        setError(
+          "Unable to load your profile. Please try again."
+        );
         return;
       }
 
       dispatch(addUser(userData));
     } catch (error) {
-      setError(error?.response?.data?.message || "Login failed");
+      setError(
+        error?.response?.data?.message || "Login failed"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  /* ================= USERNAME MIGRATION ================= */
 
   const handleModalSubmit = async (e) => {
     e.preventDefault();
@@ -157,8 +192,12 @@ const Login = () => {
     try {
       await axios.patch(
         `${BASE_URL}/profile/edit`,
-        { username: newUsername },
-        { withCredentials: true }
+        {
+          username: newUsername,
+        },
+        {
+          withCredentials: true,
+        }
       );
 
       toast.success("Username verified successfully!");
@@ -166,13 +205,19 @@ const Login = () => {
       const updatedData = await fetchUserData();
 
       if (!updatedData) {
-        setModalError("Unable to reload your profile. Please try again.");
+        setModalError(
+          "Unable to reload your profile. Please try again."
+        );
         return;
       }
 
       dispatch(addUser(updatedData));
+
       setShowModal(false);
-      navigate("/feed", { replace: true });
+
+      navigate("/feed", {
+        replace: true,
+      });
     } catch (err) {
       setModalError(
         err.response?.data?.message ||
@@ -183,222 +228,275 @@ const Login = () => {
 
   return (
     <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0 min-h-[calc(100vh-64px)]">
-      {/* BACKGROUND */}
+
+      {/* ================= BACKGROUND ================= */}
+
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 -left-20 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
+
         <div className="absolute bottom-0 right-0 w-[22rem] h-[22rem] bg-cyan-500/10 rounded-full blur-3xl" />
+
         <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[18rem] h-[18rem] bg-violet-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* LOGIN CARD */}
-      <div className="relative z-10 lg:w-1/2 w-full max-w-md">
-        <div
-          className="
-            relative flex flex-col justify-center
-            rounded-[1.75rem]
-            border border-white/10
-            bg-[#0B0E14]/95
-            backdrop-blur-xl
-            shadow-2xl shadow-black/50
-            p-8 lg:p-10
-            transition-[border-color,box-shadow]
-            duration-300
-            hover:border-indigo-400/30
-            hover:shadow-indigo-500/10
-          "
-        >
-          <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
-            Welcome back 👋
-          </h2>
+      <div className="relative z-10 max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16 justify-center">
 
-          <p className="text-gray-400 mb-8">
-            Sign in to continue to GitTogether
-          </p>
+        {/* ================= LOGIN CARD ================= */}
 
-          <form className="space-y-4" onSubmit={handleFormSubmit}>
-            {/* EMAIL */}
-            <div className="relative">
-              <label htmlFor="emailId" className="sr-only">
-                Email
-              </label>
+        <div className="relative z-10 lg:w-1/2 w-full max-w-md">
 
-              <FiMail
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
-                size={16}
-              />
+          {/* SAME MOVING BORDER AS SIGNUP */}
+          <div className="relative rounded-[1.75rem] p-[1.5px] overflow-hidden">
 
-              <input
-                id="emailId"
-                type="email"
-                name="emailId"
-                value={user.emailId}
-                onChange={handleInputData}
-                className="
-                  peer w-full pl-11 pr-4 py-3.5
-                  rounded-xl
-                  bg-white/[0.04]
-                  border border-white/10
-                  text-gray-100
-                  placeholder:text-gray-600
-                  outline-none
-                  transition-all duration-300
-                  focus:border-indigo-400/60
-                  focus:bg-white/[0.06]
-                  focus:ring-2
-                  focus:ring-indigo-500/20
-                  focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]
-                "
-                placeholder="Enter your email"
-              />
-            </div>
+            <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(99,102,241,0.6),rgba(34,211,238,0.6),rgba(139,92,246,0.6),rgba(99,102,241,0.6))] animate-[spin_6s_linear_infinite] opacity-70" />
 
-            {/* PASSWORD */}
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
+            {/* ACTUAL LOGIN CARD */}
+            <div className="relative flex flex-col justify-center rounded-[1.75rem] border border-white/10 bg-[#0B0E14]/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-8 lg:p-10">
 
-              <FiLock
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
-                size={16}
-              />
+              {/* SESSION BADGE */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4 self-start">
+                <FiTerminal size={12} />
+                Initializing Session
+              </div>
 
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={user.password}
-                onChange={handleInputData}
-                className="
-                  w-full pl-11 pr-11 py-3.5
-                  rounded-xl
-                  bg-white/[0.04]
-                  border border-white/10
-                  text-gray-100
-                  placeholder:text-gray-600
-                  outline-none
-                  transition-all duration-300
-                  focus:border-indigo-400/60
-                  focus:bg-white/[0.06]
-                  focus:ring-2
-                  focus:ring-indigo-500/20
-                  focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]
-                "
-                placeholder="Enter your password"
-              />
+              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                Welcome back 👋
+              </h2>
 
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+              <p className="text-gray-400 mb-8">
+                Sign in to continue to GitTogether
+              </p>
+
+              <form
+                className="space-y-4"
+                onSubmit={handleFormSubmit}
               >
-                {showPassword ? (
-                  <FiEyeOff size={16} />
-                ) : (
-                  <FiEye size={16} />
+
+                {/* ================= EMAIL ================= */}
+
+                <div className="relative">
+                  <label
+                    htmlFor="emailId"
+                    className="sr-only"
+                  >
+                    Email
+                  </label>
+
+                  <FiMail
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
+                    size={16}
+                  />
+
+                  <input
+                    id="emailId"
+                    type="email"
+                    name="emailId"
+                    value={user.emailId}
+                    onChange={handleInputData}
+                    className="
+                      peer w-full pl-11 pr-4 py-3.5
+                      rounded-xl
+                      bg-white/[0.04]
+                      border border-white/10
+                      text-gray-100
+                      placeholder:text-gray-600
+                      outline-none
+                      transition-all duration-300
+                      focus:border-indigo-400/60
+                      focus:bg-white/[0.06]
+                      focus:ring-2
+                      focus:ring-indigo-500/20
+                      focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]
+                    "
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                {/* ================= PASSWORD ================= */}
+
+                <div className="relative">
+                  <label
+                    htmlFor="password"
+                    className="sr-only"
+                  >
+                    Password
+                  </label>
+
+                  <FiLock
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+                    size={16}
+                  />
+
+                  <input
+                    id="password"
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    name="password"
+                    value={user.password}
+                    onChange={handleInputData}
+                    className="
+                      w-full pl-11 pr-11 py-3.5
+                      rounded-xl
+                      bg-white/[0.04]
+                      border border-white/10
+                      text-gray-100
+                      placeholder:text-gray-600
+                      outline-none
+                      transition-all duration-300
+                      focus:border-indigo-400/60
+                      focus:bg-white/[0.06]
+                      focus:ring-2
+                      focus:ring-indigo-500/20
+                      focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]
+                    "
+                    placeholder="Enter your password"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(
+                        !showPassword
+                      )
+                    }
+                    tabIndex={-1}
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    {showPassword ? (
+                      <FiEyeOff size={16} />
+                    ) : (
+                      <FiEye size={16} />
+                    )}
+                  </button>
+                </div>
+
+                                {/* ================= REMEMBER ME ================= */}
+
+                <div className="flex items-center pt-1">
+                  <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={() =>
+                        setRememberMe(!rememberMe)
+                      }
+                      className="peer sr-only"
+                    />
+
+                    <span
+                      className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-200 ${
+                        rememberMe
+                          ? "bg-gradient-to-br from-indigo-500 to-cyan-500 border-transparent"
+                          : "border-white/20 bg-white/[0.03]"
+                      }`}
+                    >
+                      {rememberMe && (
+                        <FiCheckCircle
+                          size={11}
+                          className="text-white"
+                        />
+                      )}
+                    </span>
+
+                    Remember me
+                  </label>
+                </div>
+
+                {/* ================= ERROR ================= */}
+
+                {error && (
+                  <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400 animate-fade-in">
+                    <FiAlertCircle size={14} />
+                    {error}
+                  </div>
                 )}
-              </button>
-            </div>
 
-            {/* Remember me */}
-            <div className="flex items-center pt-1">
-              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                  className="peer sr-only"
-                />
+                {/* ================= LOGIN BUTTON ================= */}
 
-                <span
-                  className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-200 ${
-                    rememberMe
-                      ? "bg-gradient-to-br from-indigo-500 to-cyan-500 border-transparent"
-                      : "border-white/20 bg-white/[0.03]"
-                  }`}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="group relative w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-cyan-500/40 hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
                 >
-                  {rememberMe && (
-                    <FiCheckCircle size={11} className="text-white" />
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                  {isSubmitting ? (
+                    <>
+                      <FiLoader
+                        size={16}
+                        className="animate-spin"
+                      />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Login
+
+                      <FiArrowRight
+                        size={16}
+                        className="transition-transform group-hover:translate-x-0.5"
+                      />
+                    </>
                   )}
+                </button>
+              </form>
+
+              {/* ================= DIVIDER ================= */}
+
+              <div className="flex items-center gap-3 my-7">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                <span className="text-[11px] uppercase tracking-widest text-gray-600">
+                  New here
                 </span>
 
-                Remember me
-              </label>
-            </div>
-
-            {/* ERROR */}
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400 animate-fade-in">
-                <FiAlertCircle size={14} />
-                {error}
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </div>
-            )}
 
-            {/* LOGIN BUTTON */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-cyan-500/40 hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
-            >
-              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <p className="text-sm text-gray-400 text-center">
+                {"Don't have an account?"}{" "}
 
-              {isSubmitting ? (
-                <>
-                  <FiLoader size={16} className="animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Login
-                  <FiArrowRight
-                    size={16}
-                    className="transition-transform group-hover:translate-x-0.5"
-                  />
-                </>
-              )}
-            </button>
-          </form>
+                <Link
+                  to="/signup"
+                  className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium transition-colors"
+                >
+                  Sign up for free
+                </Link>
+              </p>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-7">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-            <span className="text-[11px] uppercase tracking-widest text-gray-600">
-              New here
-            </span>
-
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
           </div>
-
-          <p className="text-sm text-gray-400 text-center">
-            {"Don't have an account?"}{" "}
-            <Link
-              to="/signup"
-              className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium transition-colors"
-            >
-              Sign up for free
-            </Link>
-          </p>
         </div>
+
+        {/* ================= RIGHT SIDE ANIMATION ================= */}
+
+        <div className="relative z-10 lg:w-1/2 w-full flex justify-center items-center mt-8 lg:mt-0">
+          <div className="w-full lg:w-4/5">
+            <DotLottieReact
+              src="https://lottie.host/8dd0524f-f3b2-4d4b-b190-f366c609d5b5/xA7UOO5kmG.lottie"
+              loop
+              autoplay
+            />
+          </div>
+        </div>
+
       </div>
 
-      {/* RIGHT SIDE ANIMATION */}
-      <div className="relative z-10 lg:w-1/2 w-full flex justify-center items-center mt-8 lg:mt-0">
-        <div className="w-full lg:w-4/5">
-          <DotLottieReact
-            src="https://lottie.host/8dd0524f-f3b2-4d4b-b190-f366c609d5b5/xA7UOO5kmG.lottie"
-            loop
-            autoplay
-          />
-        </div>
-      </div>
+      {/* ================= USERNAME MIGRATION MODAL ================= */}
 
-      {/* USERNAME MIGRATION MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+
           <div className="relative w-full max-w-md rounded-2xl border border-indigo-500/30 bg-[#0F131F] p-8 shadow-2xl shadow-indigo-500/10 text-center animate-fade-in">
+
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
 
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-4">
@@ -419,6 +517,9 @@ const Login = () => {
               onSubmit={handleModalSubmit}
               className="space-y-4 text-left"
             >
+
+              {/* USERNAME INPUT */}
+
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500 font-mono text-sm">
                   @
@@ -431,7 +532,9 @@ const Login = () => {
                   value={newUsername}
                   onChange={(e) =>
                     setNewUsername(
-                      e.target.value.toLowerCase().replace(/\s/g, "")
+                      e.target.value
+                        .toLowerCase()
+                        .replace(/\s/g, "")
                     )
                   }
                   className={`w-full bg-[#090D14] border text-gray-100 rounded-xl pl-8 pr-10 py-3 text-sm font-mono outline-none transition-all ${
@@ -444,6 +547,7 @@ const Login = () => {
                 />
 
                 <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+
                   {checkingUsername && (
                     <span className="h-4 w-4 rounded-full border-2 border-t-cyan-400 border-white/10 animate-spin" />
                   )}
@@ -451,8 +555,11 @@ const Login = () => {
                   {usernameValid === true && (
                     <FiCheckCircle className="text-emerald-500 w-4 h-4" />
                   )}
+
                 </span>
               </div>
+
+              {/* MODAL ERROR */}
 
               {modalError && (
                 <div className="flex items-center gap-2 px-1 text-xs text-red-400 font-mono">
@@ -460,17 +567,24 @@ const Login = () => {
                 </div>
               )}
 
+              {/* SUBMIT USERNAME */}
+
               <button
                 type="submit"
-                disabled={!usernameValid || checkingUsername}
+                disabled={
+                  !usernameValid ||
+                  checkingUsername
+                }
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 font-bold text-white shadow-lg shadow-indigo-600/30 hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Claim Space & Enter
               </button>
+
             </form>
           </div>
         </div>
       )}
+
     </main>
   );
 };
