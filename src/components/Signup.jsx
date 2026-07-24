@@ -28,21 +28,26 @@ const Signup = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [usernameStatus, setUsernameStatus] = useState(null); // "checking" | "available" | "taken"
+
+  const [usernameStatus, setUsernameStatus] = useState(null);
   const [usernameMessage, setUsernameMessage] = useState("");
+
   const usernameCheckTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const authenticatedUser = useSelector((state) => state.user);
 
   const isMounted = useRef(true);
+
   useEffect(() => {
     isMounted.current = true;
+
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  // Debounced username availability check
+  /* ================= USERNAME AVAILABILITY ================= */
+
   useEffect(() => {
     if (usernameCheckTimeoutRef.current) {
       clearTimeout(usernameCheckTimeoutRef.current);
@@ -55,11 +60,15 @@ const Signup = () => {
     }
 
     setUsernameStatus("checking");
+
     usernameCheckTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await axios.get(`${BASE_URL}/auth/check-username`, {
-          params: { username: user.username },
+          params: {
+            username: user.username,
+          },
         });
+
         if (isMounted.current) {
           if (res.data.available) {
             setUsernameStatus("available");
@@ -72,10 +81,13 @@ const Signup = () => {
       } catch (err) {
         if (isMounted.current) {
           setUsernameStatus("taken");
-          setUsernameMessage("Error checking username availability");
+          setUsernameMessage(
+            err.response?.data?.message ||
+              "Error checking username availability"
+          );
         }
       }
-    }, 500); // Debounce for 500ms
+    }, 500);
 
     return () => {
       if (usernameCheckTimeoutRef.current) {
@@ -84,31 +96,73 @@ const Signup = () => {
     };
   }, [user.username]);
 
+  /* ================= AUTH REDIRECT ================= */
+
   useEffect(() => {
     if (authenticatedUser && authenticatedUser.username) {
       navigate("/feed", { replace: true });
     }
   }, [authenticatedUser, navigate]);
 
+  /* ================= INPUT ================= */
+
   const handleInputData = (e) => {
-    if (e.target.name === "username") {
-      setUser({ ...user, [e.target.name]: e.target.value.toLowerCase().replace(/\s/g, "") });
-    } else {
-      setUser({ ...user, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setError("");
+
+    if (name === "username") {
+      setUser((prev) => ({
+        ...prev,
+        username: value.toLowerCase().replace(/\s/g, ""),
+      }));
+      return;
     }
+
+    setUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  /* ================= SIGNUP ================= */
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!user.firstName || !user.lastName || !user.emailId || !user.password || !user.username) {
+    const firstName = user.firstName.trim();
+    const lastName = user.lastName.trim();
+    const emailId = user.emailId.trim().toLowerCase();
+    const username = user.username.trim().toLowerCase();
+    const password = user.password;
+
+    /* ---------- Required fields ---------- */
+
+    if (!firstName || !lastName || !emailId || !password || !username) {
       setError("All fields are explicitly required.");
       return;
     }
 
-    if (user.firstName.length < 2) {
+    /* ---------- First name ---------- */
+
+    if (firstName.length < 2) {
       setError("First name must be at least 2 characters long.");
+      return;
+    }
+
+    /* ---------- Username ---------- */
+
+    const usernameRegex = /^[a-z0-9_]+$/;
+
+    if (
+      username.length < 3 ||
+      username.length > 30 ||
+      !usernameRegex.test(username)
+    ) {
+      setError(
+        "Username must be 3-30 characters and contain only lowercase letters, numbers, and underscores."
+      );
       return;
     }
 
@@ -117,17 +171,53 @@ const Signup = () => {
       return;
     }
 
+    /* ---------- Email ---------- */
+
+    // Deliberately restrict the local part to common signup characters.
+    // This rejects addresses such as:
+    // himanshuvarshney600#@gmail.com
+    const emailRegex =
+      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    if (!emailRegex.test(emailId)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    /* ---------- Password ---------- */
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    /* ---------- API ---------- */
+
     setIsSubmitting(true);
+
     try {
       await axios.post(
         `${BASE_URL}/signup`,
-        user,
-        { withCredentials: true }
+        {
+          ...user,
+          firstName,
+          lastName,
+          emailId,
+          username,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
       );
+
       navigate("/login");
     } catch (err) {
       if (isMounted.current) {
-        setError(err.response?.data?.message || "Registration sequence failed");
+        setError(
+          err.response?.data?.message ||
+            "Registration sequence failed"
+        );
       }
     } finally {
       if (isMounted.current) {
@@ -136,8 +226,7 @@ const Signup = () => {
     }
   };
 
-  return (
-    <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0 min-h-[calc(100vh-64px)]">
+  return (    <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0 min-h-[calc(100vh-64px)]">
       {/* Background Glow Orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 -left-20 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
@@ -148,7 +237,6 @@ const Signup = () => {
       <div className="relative z-10 max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16 justify-center">
         {/* ================= SIGNUP CARD ================= */}
         <div className="relative z-10 lg:w-1/2 w-full max-w-md">
-          {/* Animated gradient border wrapper */}
           <div className="relative rounded-[1.75rem] p-[1.5px] overflow-hidden">
             <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(99,102,241,0.6),rgba(34,211,238,0.6),rgba(139,92,246,0.6),rgba(99,102,241,0.6))] animate-[spin_6s_linear_infinite] opacity-70" />
 
@@ -156,19 +244,28 @@ const Signup = () => {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4 self-start">
                 <FaTerminal size={12} /> Initializing Session
               </div>
+
               <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
                 Join the Network
               </h2>
+
               <p className="text-gray-400 mb-8">
                 Create your GitTogether developer profile.
               </p>
 
               <form className="space-y-4" onSubmit={handleSubmitForm}>
-                {/* First Name & Last Name Split Field */}
+                {/* First Name & Last Name */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="relative">
-                    <label htmlFor="firstName" className="sr-only">First Name</label>
-                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                    <label htmlFor="firstName" className="sr-only">
+                      First Name
+                    </label>
+
+                    <FaUser
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
+                      size={14}
+                    />
+
                     <input
                       id="firstName"
                       type="text"
@@ -176,12 +273,22 @@ const Signup = () => {
                       name="firstName"
                       value={user.firstName}
                       onChange={handleInputData}
+                      required
+                      minLength={2}
                       className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                     />
                   </div>
+
                   <div className="relative">
-                    <label htmlFor="lastName" className="sr-only">Last Name</label>
-                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                    <label htmlFor="lastName" className="sr-only">
+                      Last Name
+                    </label>
+
+                    <FaUser
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
+                      size={14}
+                    />
+
                     <input
                       id="lastName"
                       type="text"
@@ -189,15 +296,23 @@ const Signup = () => {
                       name="lastName"
                       value={user.lastName}
                       onChange={handleInputData}
+                      required
                       className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                     />
                   </div>
                 </div>
 
-                {/* Username Field */}
+                {/* Username */}
                 <div className="relative">
-                  <label htmlFor="username" className="sr-only">Username</label>
-                  <FaAt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                  <label htmlFor="username" className="sr-only">
+                    Username
+                  </label>
+
+                  <FaAt
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
+                    size={14}
+                  />
+
                   <input
                     id="username"
                     type="text"
@@ -205,30 +320,50 @@ const Signup = () => {
                     name="username"
                     value={user.username}
                     onChange={handleInputData}
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    pattern="[a-z0-9_]+"
                     className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
                 </div>
-                
-                {/* Username Availability Status */}
+
+                {/* Username Availability */}
                 {user.username && user.username.length >= 3 && (
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono ${
-                    usernameStatus === "checking" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30" :
-                    usernameStatus === "available" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" :
-                    "bg-red-500/10 text-red-400 border border-red-500/30"
-                  }`}>
-                    <span className={`inline-block w-2 h-2 rounded-full ${
-                      usernameStatus === "checking" ? "bg-yellow-400 animate-pulse" :
-                      usernameStatus === "available" ? "bg-emerald-400" :
-                      "bg-red-400"
-                    }`} />
+                  <div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono ${
+                      usernameStatus === "checking"
+                        ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30"
+                        : usernameStatus === "available"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                        : "bg-red-500/10 text-red-400 border border-red-500/30"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        usernameStatus === "checking"
+                          ? "bg-yellow-400 animate-pulse"
+                          : usernameStatus === "available"
+                          ? "bg-emerald-400"
+                          : "bg-red-400"
+                      }`}
+                    />
+
                     {usernameMessage || "Checking..."}
                   </div>
                 )}
 
-                {/* Email Field */}
+                {/* Email */}
                 <div className="relative">
-                  <label htmlFor="emailId" className="sr-only">Email</label>
-                  <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400" size={14} />
+                  <label htmlFor="emailId" className="sr-only">
+                    Email
+                  </label>
+
+                  <FaEnvelope
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors peer-focus:text-cyan-400"
+                    size={14}
+                  />
+
                   <input
                     id="emailId"
                     type="email"
@@ -236,14 +371,22 @@ const Signup = () => {
                     name="emailId"
                     value={user.emailId}
                     onChange={handleInputData}
+                    required
                     className="peer w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
                 </div>
 
-                {/* Password Field */}
+                {/* Password */}
                 <div className="relative">
-                  <label htmlFor="password" className="sr-only">Password</label>
-                  <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+                  <label htmlFor="password" className="sr-only">
+                    Password
+                  </label>
+
+                  <FaLock
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+                    size={14}
+                  />
+
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -251,33 +394,57 @@ const Signup = () => {
                     name="password"
                     value={user.password}
                     onChange={handleInputData}
+                    required
+                    minLength={8}
                     className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-gray-100 placeholder:text-gray-600 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/20 focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors focus:outline-none"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    {showPassword ? (
+                      <FaEyeSlash size={16} />
+                    ) : (
+                      <FaEye size={16} />
+                    )}
                   </button>
                 </div>
 
+                {/* Error */}
                 {error && (
                   <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400 animate-fade-in">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="stroke-current shrink-0 h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+
                     <span>{error}</span>
                   </div>
                 )}
 
-                {/* Submit Button */}
+                {/* Submit */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="group relative w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:shadow-cyan-500/40 hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
                   {isSubmitting ? (
                     <>
                       <FiLoader size={16} className="animate-spin" />
@@ -286,7 +453,10 @@ const Signup = () => {
                   ) : (
                     <>
                       Create Developer Account
-                      <FiArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                      <FiArrowRight
+                        size={16}
+                        className="transition-transform group-hover:translate-x-0.5"
+                      />
                     </>
                   )}
                 </button>
@@ -295,9 +465,11 @@ const Signup = () => {
               {/* Divider */}
               <div className="flex items-center gap-3 my-7">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
                 <span className="text-[11px] uppercase tracking-widest text-gray-600">
                   Registered handles
                 </span>
+
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </div>
 
@@ -322,10 +494,16 @@ const Signup = () => {
               alt="GitTogether Platform Preview"
               className="w-full h-auto max-h-[340px] object-contain rounded-xl opacity-90 transition-all duration-500 group-hover:scale-[1.02] filter drop-shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
             />
+
             <div className="mt-6">
-              <h3 className="text-xl font-bold text-gray-200">The Global Developer Coffeehouse</h3>
+              <h3 className="text-xl font-bold text-gray-200">
+                The Global Developer Coffeehouse
+              </h3>
+
               <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-                Match with founders, build side projects, exchange stack reviews, and connect directly with hiring teams using your real codebase metrics.
+                Match with founders, build side projects, exchange stack
+                reviews, and connect directly with hiring teams using your
+                real codebase metrics.
               </p>
             </div>
           </div>

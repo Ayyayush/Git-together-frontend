@@ -183,7 +183,6 @@ const Login = () => {
 
   return (
     <main className="relative flex-grow flex flex-col lg:flex-row items-center justify-center bg-[#0B0E14] overflow-hidden px-6 py-12 lg:py-0 min-h-[calc(100vh-64px)]">
-
       {/* BACKGROUND */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 -left-20 w-[26rem] h-[26rem] bg-indigo-600/15 rounded-full blur-3xl" />
@@ -302,8 +301,9 @@ const Login = () => {
                 )}
               </button>
             </div>
-                        {/* Remember me / forgot password */}
-            <div className="flex items-center justify-between pt-1">
+
+            {/* Remember me */}
+            <div className="flex items-center pt-1">
               <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -326,13 +326,6 @@ const Login = () => {
 
                 Remember me
               </label>
-
-              <button
-                type="button"
-                className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
-              >
-                Forgot password?
-              </button>
             </div>
 
             {/* ERROR */}
